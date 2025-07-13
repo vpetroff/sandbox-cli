@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(chmod:*)",
+      "Bash(npm run cli:*)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:www.daytona.io)"
+    ],
+    "deny": []
+  }
+}
