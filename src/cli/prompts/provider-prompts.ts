@@ -93,18 +93,24 @@ class AzurePrompts implements ProviderPrompts {
       },
       {
         type: 'input',
+        name: 'containerRegistry',
+        message: 'Enter Azure Container Registry name (e.g., myregistry):',
+        validate: (input) => input.length > 0 || 'Container registry name is required'
+      },
+      {
+        type: 'input',
         name: 'tenantId',
-        message: 'Enter tenant ID (optional):',
+        message: 'Enter tenant ID (optional - for service principal auth):',
       },
       {
         type: 'input',
         name: 'clientId',
-        message: 'Enter client ID (optional):',
+        message: 'Enter client ID (optional - for service principal auth):',
       },
       {
         type: 'password',
         name: 'clientSecret',
-        message: 'Enter client secret (optional):',
+        message: 'Enter client secret (optional - for service principal auth):',
       }
     ]);
     

@@ -1,5 +1,6 @@
 import { BaseSandboxProvider } from './base';
 import { DaytonaProvider } from './daytona';
+import { AzureACIProvider } from './azure-aci';
 
 export function getProvider(providerName: string): BaseSandboxProvider {
   switch (providerName) {
@@ -8,10 +9,10 @@ export function getProvider(providerName: string): BaseSandboxProvider {
     case 'e2b':
       throw new Error('E2B provider not implemented yet');
     case 'azure':
-      throw new Error('Azure provider not implemented yet');
+      return new AzureACIProvider();
     default:
       throw new Error(`Unknown provider: ${providerName}`);
   }
 }
 
-export { BaseSandboxProvider, DaytonaProvider };
+export { BaseSandboxProvider, DaytonaProvider, AzureACIProvider };

@@ -23,6 +23,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@azure/arm-containerinstance": "^9.1.0",
+    "@azure/identity": "^4.10.2",
     "@daytonaio/sdk": "^0.22.1",
     "axios": "^1.5.0",
     "chalk": "^5.3.0",
