@@ -7,7 +7,7 @@ export interface DeploymentOptions {
 export interface SandboxInstance {
   id: string;
   name: string;
-  status: 'creating' | 'running' | 'stopped' | 'error';
+  status: string;
   url?: string;
   provider: string;
   createdAt: Date;

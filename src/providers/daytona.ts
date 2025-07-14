@@ -1,4 +1,4 @@
-import { Daytona } from '@daytonaio/sdk';
+import { Daytona, Image, CreateSandboxFromImageParams } from '@daytonaio/sdk';
 import { BaseSandboxProvider, DeploymentOptions, SandboxInstance, DeploymentResult } from './base';
 import { ConfigManager } from '../core/config';
 import * as fs from 'fs-extra';
@@ -46,8 +46,8 @@ export class DaytonaProvider extends BaseSandboxProvider {
     // Initialize Daytona client with configuration
     this.client = new Daytona({
       apiKey: config.apiKey,
-      apiUrl: config.serverUrl || 'https://api.daytona.io',
-      target: config.defaultRegion || 'us-east-1'
+      apiUrl: config.serverUrl || 'https://app.daytona.io/api',
+      target: 'eu'
     });
 
     return this.client;
@@ -69,23 +69,28 @@ export class DaytonaProvider extends BaseSandboxProvider {
     };
 
     try {
-      // Create sandbox with custom configuration
-      const sandbox = await client.create({
-        language: 'typescript', // Default language, can be made configurable
-        envVars: {
-          NODE_ENV: 'development'
+
+      // Define the dynamic image
+
+      console.log(options.folder);
+      console.log(options.dockerfile);
+
+      const dynamicImage = Image.fromDockerfile(options.dockerfile);
+
+      // Create a new Sandbox with the dynamic image and stream the build logs
+      const sandbox = await client.create(
+        {
+          image: dynamicImage,
+        },
+        {
+          timeout: 0,
+          onSnapshotCreateLogs: console.log,
         }
-      });
+      )
 
       // Update instance with sandbox info
       instance.status = 'running';
       instance.url = await this.getSandboxUrl(sandbox);
-
-      // Upload files to the sandbox
-      await this.uploadFiles(sandbox, options.folder);
-
-      // Build and run the application using the Dockerfile
-      await this.buildAndRun(sandbox, options.dockerfile);
 
       return {
         instance,
@@ -106,14 +111,14 @@ export class DaytonaProvider extends BaseSandboxProvider {
       // In a real scenario, you'd need to track sandboxes in your config or use Daytona's API
       const sandboxes = await client.list();
       
-      return sandboxes.map((sandbox: any) => ({
+      return await Promise.all(sandboxes.map(async (sandbox: any) => ({
         id: sandbox.id,
         name: sandbox.name || 'Unknown',
-        status: this.mapDaytonaStatus(sandbox.state || 'unknown'),
+        status: sandbox.state || 'unknown',
         provider: this.name,
         createdAt: new Date(sandbox.createdAt || Date.now()),
-        url: sandbox.url
-      }));
+        url: sandbox.url || await this.getSandboxUrl(sandbox)
+      })));
 
     } catch (error) {
       throw new Error(`Failed to list Daytona sandboxes: ${error}`);
@@ -149,7 +154,7 @@ export class DaytonaProvider extends BaseSandboxProvider {
       const sandbox = await client.get(instanceId);
       // Refresh data to get current status
       await sandbox.refreshData();
-      return this.mapDaytonaStatus(sandbox.state || 'unknown');
+      return sandbox.state || 'unknown';
     } catch (error) {
       throw new Error(`Failed to get Daytona sandbox status: ${error}`);
     }
@@ -158,11 +163,12 @@ export class DaytonaProvider extends BaseSandboxProvider {
   private async getSandboxUrl(sandbox: any): Promise<string> {
     // Use the preview link for port 8080 (default app port)
     try {
-      const url = await sandbox.getPreviewLink(8080);
-      return url;
+      const urlData = await sandbox.getPreviewLink(8080);
+      return urlData?.url;
     } catch (error) {
+      console.log(error)
       // Fallback to constructed URL if preview link fails
-      return `https://sandbox-${sandbox.id}.daytona.io`;
+      return `https://sandbox-${sandbox.id}.proxy.daytona.work`;
     }
   }
 
@@ -205,43 +211,5 @@ export class DaytonaProvider extends BaseSandboxProvider {
     }
     
     return files;
-  }
-
-  private async buildAndRun(sandbox: any, dockerfilePath: string): Promise<void> {
-    const resolvedDockerfilePath = path.resolve(dockerfilePath);
-    
-    if (!await fs.pathExists(resolvedDockerfilePath)) {
-      throw new Error(`Dockerfile not found: ${resolvedDockerfilePath}`);
-    }
-
-    // Read Dockerfile content
-    const dockerfileContent = await fs.readFile(resolvedDockerfilePath, 'utf-8');
-    
-    // Upload Dockerfile to sandbox
-    await sandbox.fs.writeFile('Dockerfile', dockerfileContent);
-    
-    // Build Docker image
-    await sandbox.process.executeCommand('docker build -t app .');
-    
-    // Run the container
-    await sandbox.process.executeCommand('docker run -d -p 8080:8080 app');
-  }
-
-  private mapDaytonaStatus(daytonaStatus: string): SandboxInstance['status'] {
-    switch (daytonaStatus?.toLowerCase()) {
-      case 'running':
-        return 'running';
-      case 'creating':
-      case 'starting':
-        return 'creating';
-      case 'stopped':
-      case 'stopping':
-        return 'stopped';
-      case 'error':
-      case 'failed':
-        return 'error';
-      default:
-        return 'creating';
-    }
   }
 }
