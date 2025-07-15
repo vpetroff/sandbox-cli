@@ -1,12 +1,9 @@
-import { Daytona, Image, CreateSandboxFromImageParams } from '@daytonaio/sdk';
+import { Daytona, Image } from '@daytonaio/sdk';
 import { BaseSandboxProvider, DeploymentOptions, SandboxInstance, DeploymentResult, CreateSandboxOptions, DeployOptions, SandboxStatus, ExecuteOptions, ExecuteResult } from './base';
 import { ConfigManager } from '../core/config';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { promisify } from 'util';
-import { exec } from 'child_process';
 
-const execAsync = promisify(exec);
 
 export class DaytonaProvider extends BaseSandboxProvider {
   name = 'daytona';
@@ -303,13 +300,11 @@ export class DaytonaProvider extends BaseSandboxProvider {
   }
 
   // New methods for command execution
-  async executeCommand(sandboxId: string, options: ExecuteOptions): Promise<ExecuteResult> {
+  async executeCommand(sandboxId: string, _options: ExecuteOptions): Promise<ExecuteResult> {
     const client = await this.initializeClient();
     
     try {
-      const sandbox = await client.get(sandboxId);
-      
-      const startTime = Date.now();
+      await client.get(sandboxId);
       
       // TODO: Implement proper command execution using Daytona SDK
       // The exact API method needs to be determined from Daytona documentation

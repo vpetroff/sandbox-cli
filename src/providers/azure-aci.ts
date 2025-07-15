@@ -325,7 +325,7 @@ export class AzureACIProvider extends BaseSandboxProvider {
         const { stdout } = await import('child_process').then(cp => 
           new Promise<{stdout: string}>((resolve, reject) => {
             cp.exec(`az acr credential show --name ${config.containerRegistry} --query "passwords[0].value" -o tsv`, 
-              (error, stdout, stderr) => {
+              (error, stdout) => {
                 if (error) reject(error);
                 else resolve({ stdout });
               });
@@ -385,7 +385,6 @@ export class AzureACIProvider extends BaseSandboxProvider {
     }
     
     // Generate unique identifiers
-    const instanceId = this.generateInstanceId();
     const instanceName = this.generateInstanceName(options.folder);
     const containerGroupName = `${instanceName}-cg`;
     
@@ -489,7 +488,6 @@ export class AzureACIProvider extends BaseSandboxProvider {
         }, `${containerGroupName}-${Date.now()}`);
       } else {
         // Incremental update - build new image with same Dockerfile
-        const existingGroup = await client.containerGroups.get(config.resourceGroup, containerGroupName);
         const baseName = containerGroupName.replace('-cg', '');
         imageUri = await this.buildAndPushImage({
           folder: options.folder,
@@ -563,7 +561,7 @@ export class AzureACIProvider extends BaseSandboxProvider {
   }
 
   // New methods for command execution
-  async executeCommand(sandboxId: string, options: ExecuteOptions): Promise<ExecuteResult> {
+  async executeCommand(sandboxId: string, _options: ExecuteOptions): Promise<ExecuteResult> {
     const client = await this.initializeClient();
     const config = await this.configManager.getProviderConfig(this.name);
     
@@ -583,8 +581,6 @@ export class AzureACIProvider extends BaseSandboxProvider {
       if (!containerName) {
         throw new Error('Container name not found');
       }
-      
-      const startTime = Date.now();
       
       // For Azure Container Instances, we need to use the exec API
       // This is a simplified implementation - Azure ACI exec support is limited

@@ -23,16 +23,6 @@ export class DockerUtils {
     }
   }
 
-  static async validateDockerfile(dockerfilePath: string): Promise<boolean> {
-    try {
-      // Basic validation - check if we can parse the Dockerfile
-      await execAsync(`docker build --platform=linux/amd64 --dry-run -f ${dockerfilePath} .`);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   static async buildImage(imageName: string, dockerfilePath: string, contextPath: string): Promise<void> {
     const buildCommand = `docker build --platform=linux/amd64 -t ${imageName} -f ${dockerfilePath} ${contextPath}`;
     

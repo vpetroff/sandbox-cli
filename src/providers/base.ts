@@ -65,8 +65,6 @@ export const SandboxStatus = {
   DESTROYED: 'destroyed'
 } as const;
 
-export type SandboxStatusType = typeof SandboxStatus[keyof typeof SandboxStatus];
-
 export abstract class BaseSandboxProvider {
   abstract name: string;
   

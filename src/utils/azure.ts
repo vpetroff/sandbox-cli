@@ -23,33 +23,6 @@ export class AzureUtils {
     }
   }
 
-  static async validateAzureSubscription(subscriptionId: string): Promise<boolean> {
-    try {
-      await execAsync(`az account show --subscription ${subscriptionId}`);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  static async validateResourceGroup(subscriptionId: string, resourceGroup: string): Promise<boolean> {
-    try {
-      await execAsync(`az group show --name ${resourceGroup} --subscription ${subscriptionId}`);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  static async validateContainerRegistry(subscriptionId: string, registryName: string): Promise<boolean> {
-    try {
-      await execAsync(`az acr show --name ${registryName} --subscription ${subscriptionId}`);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   static getAzureCLIInstallMessage(): string {
     return `
 Azure CLI is required to use the Azure provider but is not installed.

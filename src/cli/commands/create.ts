@@ -4,7 +4,6 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { ConfigManager } from '../../core/config';
 import { getProvider } from '../../providers';
-import { SandboxStatus } from '../../providers/base';
 
 export async function createCommand(folder: string, options: { provider?: string; dockerfile: string }): Promise<void> {
   console.log(chalk.blue(`🏗️  Creating sandbox for ${folder}...`));
