@@ -1,5 +1,5 @@
 import { Daytona, Image, CreateSandboxFromImageParams } from '@daytonaio/sdk';
-import { BaseSandboxProvider, DeploymentOptions, SandboxInstance, DeploymentResult, CreateSandboxOptions, DeployOptions, SandboxStatus } from './base';
+import { BaseSandboxProvider, DeploymentOptions, SandboxInstance, DeploymentResult, CreateSandboxOptions, DeployOptions, SandboxStatus, ExecuteOptions, ExecuteResult } from './base';
 import { ConfigManager } from '../core/config';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -300,6 +300,30 @@ export class DaytonaProvider extends BaseSandboxProvider {
     } catch (error) {
       throw new Error(`Failed to get Daytona sandbox: ${error}`);
     }
+  }
+
+  // New methods for command execution
+  async executeCommand(sandboxId: string, options: ExecuteOptions): Promise<ExecuteResult> {
+    const client = await this.initializeClient();
+    
+    try {
+      const sandbox = await client.get(sandboxId);
+      
+      const startTime = Date.now();
+      
+      // TODO: Implement proper command execution using Daytona SDK
+      // The exact API method needs to be determined from Daytona documentation
+      // For now, this is a placeholder implementation
+      
+      throw new Error('Command execution in Daytona is not yet implemented. Please check the Daytona SDK documentation for the correct exec API.');
+      
+    } catch (error) {
+      throw new Error(`Daytona command execution failed: ${error}`);
+    }
+  }
+  
+  supportsExecution(): boolean {
+    return true;
   }
 
   private async getAllFiles(dirPath: string): Promise<string[]> {

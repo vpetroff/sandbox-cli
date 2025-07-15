@@ -42,6 +42,20 @@ export interface DeploymentResult {
   logs?: string[];
 }
 
+export interface ExecuteOptions {
+  command: string;
+  cwd?: string;
+  timeout?: number;
+  stream?: boolean;
+}
+
+export interface ExecuteResult {
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  duration: number;
+}
+
 // Sandbox lifecycle states
 export const SandboxStatus = {
   CREATING: 'creating',
@@ -68,6 +82,10 @@ export abstract class BaseSandboxProvider {
   abstract createSandbox(options: CreateSandboxOptions): Promise<SandboxInstance>;
   abstract deployToSandbox(sandboxId: string, options: DeployOptions): Promise<DeploymentResult>;
   abstract getSandbox(sandboxId: string): Promise<SandboxInstance>;
+  
+  // New methods for command execution
+  abstract executeCommand(sandboxId: string, options: ExecuteOptions): Promise<ExecuteResult>;
+  abstract supportsExecution(): boolean;
   
   protected generateInstanceId(): string {
     return `${this.name}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;

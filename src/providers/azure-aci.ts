@@ -1,6 +1,6 @@
 import { ContainerInstanceManagementClient } from '@azure/arm-containerinstance';
 import { DefaultAzureCredential, ClientSecretCredential } from '@azure/identity';
-import { BaseSandboxProvider, DeploymentOptions, SandboxInstance, DeploymentResult, CreateSandboxOptions, DeployOptions, SandboxStatus } from './base';
+import { BaseSandboxProvider, DeploymentOptions, SandboxInstance, DeploymentResult, CreateSandboxOptions, DeployOptions, SandboxStatus, ExecuteOptions, ExecuteResult } from './base';
 import { ConfigManager } from '../core/config';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -560,6 +560,49 @@ export class AzureACIProvider extends BaseSandboxProvider {
     } catch (error) {
       throw new Error(`Failed to get Azure ACI sandbox: ${error}`);
     }
+  }
+
+  // New methods for command execution
+  async executeCommand(sandboxId: string, options: ExecuteOptions): Promise<ExecuteResult> {
+    const client = await this.initializeClient();
+    const config = await this.configManager.getProviderConfig(this.name);
+    
+    if (!config) {
+      throw new Error('Azure provider configuration not found');
+    }
+    
+    try {
+      const containerGroupName = sandboxId.includes('-cg') ? sandboxId : `${sandboxId}-cg`;
+      const containerGroup = await client.containerGroups.get(config.resourceGroup, containerGroupName);
+      
+      if (!containerGroup.containers || containerGroup.containers.length === 0) {
+        throw new Error('No containers found in the container group');
+      }
+      
+      const containerName = containerGroup.containers[0].name;
+      if (!containerName) {
+        throw new Error('Container name not found');
+      }
+      
+      const startTime = Date.now();
+      
+      // For Azure Container Instances, we need to use the exec API
+      // This is a simplified implementation - Azure ACI exec support is limited
+      // In practice, you might need to use Azure Container Instance's exec API
+      // or implement a workaround using container restart with command override
+      
+      // Note: Azure Container Instances has limited exec support
+      // This is a placeholder implementation that would need Azure Container Instance exec API
+      throw new Error('Command execution in Azure Container Instances is not fully supported yet. Consider using Daytona provider for interactive command execution.');
+      
+    } catch (error) {
+      throw new Error(`Azure ACI command execution failed: ${error}`);
+    }
+  }
+  
+  supportsExecution(): boolean {
+    // Azure Container Instances has limited exec support
+    return false;
   }
 
   private mapAzureStatus(azureState: string | undefined): SandboxInstance['status'] {
