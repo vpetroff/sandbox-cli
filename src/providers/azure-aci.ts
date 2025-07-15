@@ -11,7 +11,7 @@ export class AzureACIProvider extends BaseSandboxProvider {
   name = 'azure';
   private client: ContainerInstanceManagementClient | null = null;
   private configManager: ConfigManager;
-  
+
   constructor() {
     super();
     this.configManager = new ConfigManager();
@@ -20,7 +20,7 @@ export class AzureACIProvider extends BaseSandboxProvider {
   async configure(): Promise<void> {
     // Check Azure CLI availability before configuration
     await this.validateAzurePrerequisites();
-    
+
     // Configuration is handled by the CLI prompts
     // This method ensures the client is properly initialized
     await this.initializeClient();
@@ -46,7 +46,7 @@ export class AzureACIProvider extends BaseSandboxProvider {
     }
 
     let credential;
-    
+
     // Use service principal authentication if credentials are provided
     if (config.tenantId && config.clientId && config.clientSecret) {
       credential = new ClientSecretCredential(
@@ -70,19 +70,19 @@ export class AzureACIProvider extends BaseSandboxProvider {
   async deploy(options: DeploymentOptions): Promise<DeploymentResult> {
     // Validate Azure prerequisites before deployment
     await this.validateAzurePrerequisites();
-    
+
     const client = await this.initializeClient();
     const config = await this.configManager.getProviderConfig(this.name);
-    
+
     if (!config) {
       throw new Error('Azure provider configuration not found');
     }
-    
+
     // Generate unique identifiers
     const instanceId = this.generateInstanceId();
     const instanceName = this.generateInstanceName(options.folder);
     const containerGroupName = `${instanceName}-cg`;
-    
+
     const instance: SandboxInstance = {
       id: instanceId,
       name: instanceName,
@@ -94,7 +94,7 @@ export class AzureACIProvider extends BaseSandboxProvider {
     try {
       // Build Docker image and push to a registry
       const imageUri = await this.buildAndPushImage(options, containerGroupName);
-      
+
       // Create container group configuration with registry credentials
       const containerGroupSpec = {
         location: config.location || 'eastus',
@@ -169,14 +169,14 @@ export class AzureACIProvider extends BaseSandboxProvider {
   async list(): Promise<SandboxInstance[]> {
     const client = await this.initializeClient();
     const config = await this.configManager.getProviderConfig(this.name);
-    
+
     if (!config) {
       throw new Error('Azure provider configuration not found');
     }
-    
+
     try {
       const containerGroups = [];
-      
+
       // List all container groups in the resource group
       for await (const containerGroup of client.containerGroups.listByResourceGroup(config.resourceGroup)) {
         // Filter only our sandbox containers (those with our naming pattern)
@@ -184,7 +184,7 @@ export class AzureACIProvider extends BaseSandboxProvider {
           containerGroups.push(containerGroup);
         }
       }
-      
+
       return containerGroups.map((cg: any) => ({
         id: cg.name || 'unknown',
         name: cg.name?.replace('-cg', '') || 'Unknown',
@@ -202,11 +202,11 @@ export class AzureACIProvider extends BaseSandboxProvider {
   async destroy(instanceId: string): Promise<void> {
     const client = await this.initializeClient();
     const config = await this.configManager.getProviderConfig(this.name);
-    
+
     if (!config) {
       throw new Error('Azure provider configuration not found');
     }
-    
+
     try {
       const containerGroupName = instanceId.includes('-cg') ? instanceId : `${instanceId}-cg`;
       await client.containerGroups.beginDeleteAndWait(config.resourceGroup, containerGroupName);
@@ -218,11 +218,11 @@ export class AzureACIProvider extends BaseSandboxProvider {
   async getInstanceUrl(instanceId: string): Promise<string | undefined> {
     const client = await this.initializeClient();
     const config = await this.configManager.getProviderConfig(this.name);
-    
+
     if (!config) {
       throw new Error('Azure provider configuration not found');
     }
-    
+
     try {
       const containerGroupName = instanceId.includes('-cg') ? instanceId : `${instanceId}-cg`;
       const containerGroup = await client.containerGroups.get(config.resourceGroup, containerGroupName);
@@ -235,11 +235,11 @@ export class AzureACIProvider extends BaseSandboxProvider {
   async getInstanceStatus(instanceId: string): Promise<SandboxInstance['status']> {
     const client = await this.initializeClient();
     const config = await this.configManager.getProviderConfig(this.name);
-    
+
     if (!config) {
       throw new Error('Azure provider configuration not found');
     }
-    
+
     try {
       const containerGroupName = instanceId.includes('-cg') ? instanceId : `${instanceId}-cg`;
       const containerGroup = await client.containerGroups.get(config.resourceGroup, containerGroupName);
@@ -257,7 +257,7 @@ export class AzureACIProvider extends BaseSandboxProvider {
 
     const folderPath = path.resolve(options.folder);
     const dockerfilePath = path.resolve(options.dockerfile);
-    
+
     if (!await fs.pathExists(folderPath) || !await fs.pathExists(dockerfilePath)) {
       throw new Error('Folder or Dockerfile not found');
     }
@@ -273,20 +273,20 @@ export class AzureACIProvider extends BaseSandboxProvider {
 
     const registryUrl = `${config.containerRegistry}.azurecr.io`;
     const imageTag = `${registryUrl}/${imageName}:${Date.now()}`;
-    
+
     try {
       console.log('Authenticating with Azure Container Registry...');
       await this.authenticateWithACR(config);
-      
+
       console.log('Building Docker image...');
       await DockerUtils.buildImage(imageTag, dockerfilePath, folderPath);
-      
+
       console.log('Pushing image to Azure Container Registry...');
       await DockerUtils.pushImage(imageTag);
-      
+
       console.log(`Image pushed successfully: ${imageTag}`);
       return imageTag;
-      
+
     } catch (error) {
       throw new Error(`Failed to build and push Docker image: ${error}`);
     }
@@ -309,7 +309,7 @@ export class AzureACIProvider extends BaseSandboxProvider {
 
   private async getImageRegistryCredentials(config: any): Promise<any[]> {
     const registryServer = `${config.containerRegistry}.azurecr.io`;
-    
+
     if (config.tenantId && config.clientId && config.clientSecret) {
       // Use service principal credentials
       return [
@@ -322,18 +322,18 @@ export class AzureACIProvider extends BaseSandboxProvider {
     } else {
       // Use Azure CLI to get ACR access token
       try {
-        const { stdout } = await import('child_process').then(cp => 
-          new Promise<{stdout: string}>((resolve, reject) => {
-            cp.exec(`az acr credential show --name ${config.containerRegistry} --query "passwords[0].value" -o tsv`, 
+        const { stdout } = await import('child_process').then(cp =>
+          new Promise<{ stdout: string }>((resolve, reject) => {
+            cp.exec(`az acr credential show --name ${config.containerRegistry} --query "passwords[0].value" -o tsv`,
               (error, stdout) => {
                 if (error) reject(error);
                 else resolve({ stdout });
               });
           })
         );
-        
+
         const password = stdout.trim();
-        
+
         return [
           {
             server: registryServer,
@@ -376,18 +376,18 @@ export class AzureACIProvider extends BaseSandboxProvider {
   async createSandbox(options: CreateSandboxOptions): Promise<SandboxInstance> {
     // Validate Azure prerequisites before creation
     await this.validateAzurePrerequisites();
-    
+
     const client = await this.initializeClient();
     const config = await this.configManager.getProviderConfig(this.name);
-    
+
     if (!config) {
       throw new Error('Azure provider configuration not found');
     }
-    
+
     // Generate unique identifiers
     const instanceName = this.generateInstanceName(options.folder);
     const containerGroupName = `${instanceName}-cg`;
-    
+
     const instance: SandboxInstance = {
       id: containerGroupName, // Use container group name as ID for Azure
       name: instanceName,
@@ -403,7 +403,7 @@ export class AzureACIProvider extends BaseSandboxProvider {
         dockerfile: options.dockerfile,
         name: options.name
       }, containerGroupName);
-      
+
       // Create container group configuration with registry credentials
       const containerGroupSpec = {
         location: config.location || 'eastus',
@@ -458,7 +458,7 @@ export class AzureACIProvider extends BaseSandboxProvider {
 
       // Update instance status to ready (container group created, image built)
       instance.status = SandboxStatus.READY;
-      
+
       return instance;
 
     } catch (error) {
@@ -470,14 +470,14 @@ export class AzureACIProvider extends BaseSandboxProvider {
   async deployToSandbox(sandboxId: string, options: DeployOptions): Promise<DeploymentResult> {
     const client = await this.initializeClient();
     const config = await this.configManager.getProviderConfig(this.name);
-    
+
     if (!config) {
       throw new Error('Azure provider configuration not found');
     }
-    
+
     try {
       const containerGroupName = sandboxId.includes('-cg') ? sandboxId : `${sandboxId}-cg`;
-      
+
       // Build new image with updated code
       let imageUri: string;
       if (options.dockerfile) {
@@ -494,20 +494,23 @@ export class AzureACIProvider extends BaseSandboxProvider {
           dockerfile: path.join(options.folder, 'Dockerfile') // Assume Dockerfile in folder
         }, `${baseName}-${Date.now()}`);
       }
-      
+
       // Update container group with new image
       const existingGroup = await client.containerGroups.get(config.resourceGroup, containerGroupName);
-      
+
       if (existingGroup.containers && existingGroup.containers.length > 0) {
         existingGroup.containers[0].image = imageUri;
-        
+
+        // Ensure registry credentials are properly set for the update
+        existingGroup.imageRegistryCredentials = await this.getImageRegistryCredentials(config);
+
         // Update the container group
         const deploymentResult = await client.containerGroups.beginCreateOrUpdateAndWait(
           config.resourceGroup,
           containerGroupName,
           existingGroup
         );
-        
+
         const instance: SandboxInstance = {
           id: containerGroupName,
           name: containerGroupName.replace('-cg', ''),
@@ -537,15 +540,15 @@ export class AzureACIProvider extends BaseSandboxProvider {
   async getSandbox(sandboxId: string): Promise<SandboxInstance> {
     const client = await this.initializeClient();
     const config = await this.configManager.getProviderConfig(this.name);
-    
+
     if (!config) {
       throw new Error('Azure provider configuration not found');
     }
-    
+
     try {
       const containerGroupName = sandboxId.includes('-cg') ? sandboxId : `${sandboxId}-cg`;
       const containerGroup = await client.containerGroups.get(config.resourceGroup, containerGroupName);
-      
+
       return {
         id: containerGroup.name || sandboxId,
         name: containerGroup.name?.replace('-cg', '') || 'Unknown',
@@ -564,38 +567,38 @@ export class AzureACIProvider extends BaseSandboxProvider {
   async executeCommand(sandboxId: string, _options: ExecuteOptions): Promise<ExecuteResult> {
     const client = await this.initializeClient();
     const config = await this.configManager.getProviderConfig(this.name);
-    
+
     if (!config) {
       throw new Error('Azure provider configuration not found');
     }
-    
+
     try {
       const containerGroupName = sandboxId.includes('-cg') ? sandboxId : `${sandboxId}-cg`;
       const containerGroup = await client.containerGroups.get(config.resourceGroup, containerGroupName);
-      
+
       if (!containerGroup.containers || containerGroup.containers.length === 0) {
         throw new Error('No containers found in the container group');
       }
-      
+
       const containerName = containerGroup.containers[0].name;
       if (!containerName) {
         throw new Error('Container name not found');
       }
-      
+
       // For Azure Container Instances, we need to use the exec API
       // This is a simplified implementation - Azure ACI exec support is limited
       // In practice, you might need to use Azure Container Instance's exec API
       // or implement a workaround using container restart with command override
-      
+
       // Note: Azure Container Instances has limited exec support
       // This is a placeholder implementation that would need Azure Container Instance exec API
       throw new Error('Command execution in Azure Container Instances is not fully supported yet. Consider using Daytona provider for interactive command execution.');
-      
+
     } catch (error) {
       throw new Error(`Azure ACI command execution failed: ${error}`);
     }
   }
-  
+
   supportsExecution(): boolean {
     // Azure Container Instances has limited exec support
     return false;
