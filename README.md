@@ -41,11 +41,18 @@ npm run cli configure azure
 npm run cli configure e2b
 ```
 
-### Deploy Your Application
+### Create and Deploy Your Application
 
 ```bash
-npm run cli deploy ./my-app --provider daytona
-npm run cli deploy ./my-app --provider azure
+# Create a sandbox environment
+npm run cli create ./my-app --provider daytona
+
+# Deploy code to the current sandbox
+npm run cli deploy ./my-app
+
+# Or create with Azure
+npm run cli create ./my-app --provider azure
+npm run cli deploy ./my-app
 ```
 
 ## 📖 Provider Setup
@@ -109,30 +116,59 @@ Coming soon! E2B provider implementation is planned.
 
 ## 🎯 Usage
 
-### Deploy an Application
+### Create a Sandbox Environment
 
 ```bash
-# Deploy to default provider
+# Create sandbox with default provider
+npm run cli create ./my-app
+
+# Create sandbox with specific provider
+npm run cli create ./my-app --provider azure
+
+# Create sandbox with custom Dockerfile
+npm run cli create ./my-app --dockerfile ./custom.Dockerfile
+```
+
+### Deploy Code to Current Sandbox
+
+```bash
+# Deploy to current sandbox
 npm run cli deploy ./my-app
 
-# Deploy to specific provider
-npm run cli deploy ./my-app --provider azure
-
-# Deploy with custom Dockerfile
+# Deploy with custom Dockerfile (optional for updates)
 npm run cli deploy ./my-app --dockerfile ./custom.Dockerfile
 ```
 
 ### Manage Sandboxes
 
 ```bash
-# List all active sandboxes
+# List all sandboxes (current one highlighted)
 npm run cli list
+
+# Select current sandbox
+npm run cli select
 
 # Open sandbox in browser
 npm run cli browse <sandbox-id>
 
 # Destroy a sandbox
 npm run cli destroy <sandbox-id>
+```
+
+### Typical Workflow
+
+```bash
+# 1. Create sandbox once
+npm run cli create ./my-app --provider daytona
+
+# 2. Make code changes and deploy iteratively
+npm run cli deploy ./my-app
+# ... make changes ...
+npm run cli deploy ./my-app
+
+# 3. Switch between projects
+npm run cli select  # choose different sandbox
+npm run cli deploy ./other-project
 ```
 
 ### Set Default Provider
@@ -216,6 +252,39 @@ npm run dev
 # Build and run CLI
 npm run cli -- <command>
 ```
+
+## 🔄 Migration Guide
+
+If you were using the previous single `deploy` command, here's how to migrate to the new split workflow:
+
+### Old Workflow (Deprecated)
+```bash
+# This created and deployed in one step
+npm run cli deploy ./my-app --provider azure
+```
+
+### New Workflow (Recommended)
+```bash
+# 1. Create sandbox once
+npm run cli create ./my-app --provider azure
+
+# 2. Deploy code iteratively
+npm run cli deploy ./my-app
+# ... make changes ...
+npm run cli deploy ./my-app  # Much faster subsequent deployments!
+```
+
+### Benefits of New Workflow
+- **Faster iterations**: Deploy code changes without recreating infrastructure
+- **Better resource management**: Reuse sandbox environments
+- **Clearer separation**: Infrastructure setup vs. code deployment
+- **Multi-project support**: Switch between different sandboxes easily
+
+### Key Differences
+- `create` replaces the infrastructure setup part of the old `deploy`
+- New `deploy` only handles code updates to existing sandboxes
+- `select` command lets you switch between multiple sandbox environments
+- `list` command shows which sandbox is currently active
 
 ## 🔍 Troubleshooting
 

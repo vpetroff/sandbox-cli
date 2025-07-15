@@ -4,6 +4,18 @@ export interface DeploymentOptions {
   name?: string;
 }
 
+export interface CreateSandboxOptions {
+  folder: string;
+  dockerfile: string;
+  name?: string;
+  provider?: string;
+}
+
+export interface DeployOptions {
+  folder: string;
+  dockerfile?: string; // Optional for incremental updates
+}
+
 export interface SandboxInstance {
   id: string;
   name: string;
@@ -13,10 +25,33 @@ export interface SandboxInstance {
   createdAt: Date;
 }
 
+export interface SandboxMetadata {
+  id: string;
+  name: string;
+  provider: string;
+  status: string;
+  url?: string;
+  createdAt: Date;
+  lastDeployedAt?: Date;
+  deploymentCount: number;
+  sourceFolder: string;
+}
+
 export interface DeploymentResult {
   instance: SandboxInstance;
   logs?: string[];
 }
+
+// Sandbox lifecycle states
+export const SandboxStatus = {
+  CREATING: 'creating',
+  READY: 'ready',
+  DEPLOYED: 'deployed',
+  ERROR: 'error',
+  DESTROYED: 'destroyed'
+} as const;
+
+export type SandboxStatusType = typeof SandboxStatus[keyof typeof SandboxStatus];
 
 export abstract class BaseSandboxProvider {
   abstract name: string;
@@ -29,8 +64,13 @@ export abstract class BaseSandboxProvider {
   abstract getInstanceUrl(instanceId: string): Promise<string | undefined>;
   abstract getInstanceStatus(instanceId: string): Promise<SandboxInstance['status']>;
   
+  // New methods for split workflow
+  abstract createSandbox(options: CreateSandboxOptions): Promise<SandboxInstance>;
+  abstract deployToSandbox(sandboxId: string, options: DeployOptions): Promise<DeploymentResult>;
+  abstract getSandbox(sandboxId: string): Promise<SandboxInstance>;
+  
   protected generateInstanceId(): string {
-    return `${this.name}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `${this.name}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
   
   protected generateInstanceName(folder: string): string {

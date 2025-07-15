@@ -1,6 +1,6 @@
 import { ContainerInstanceManagementClient } from '@azure/arm-containerinstance';
 import { DefaultAzureCredential, ClientSecretCredential } from '@azure/identity';
-import { BaseSandboxProvider, DeploymentOptions, SandboxInstance, DeploymentResult } from './base';
+import { BaseSandboxProvider, DeploymentOptions, SandboxInstance, DeploymentResult, CreateSandboxOptions, DeployOptions, SandboxStatus } from './base';
 import { ConfigManager } from '../core/config';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -190,7 +190,7 @@ export class AzureACIProvider extends BaseSandboxProvider {
         name: cg.name?.replace('-cg', '') || 'Unknown',
         status: this.mapAzureStatus(cg.instanceView?.state),
         provider: this.name,
-        createdAt: new Date(cg.systemData?.createdAt || Date.now()),
+        createdAt: new Date(Date.now()),
         url: this.getContainerUrl(cg)
       }));
 
@@ -370,6 +370,196 @@ export class AzureACIProvider extends BaseSandboxProvider {
       return `http://${containerGroup.ipAddress.ip}:${port}`;
     }
     return undefined;
+  }
+
+  // New methods for split workflow
+  async createSandbox(options: CreateSandboxOptions): Promise<SandboxInstance> {
+    // Validate Azure prerequisites before creation
+    await this.validateAzurePrerequisites();
+    
+    const client = await this.initializeClient();
+    const config = await this.configManager.getProviderConfig(this.name);
+    
+    if (!config) {
+      throw new Error('Azure provider configuration not found');
+    }
+    
+    // Generate unique identifiers
+    const instanceId = this.generateInstanceId();
+    const instanceName = this.generateInstanceName(options.folder);
+    const containerGroupName = `${instanceName}-cg`;
+    
+    const instance: SandboxInstance = {
+      id: containerGroupName, // Use container group name as ID for Azure
+      name: instanceName,
+      status: SandboxStatus.CREATING,
+      provider: this.name,
+      createdAt: new Date()
+    };
+
+    try {
+      // Build Docker image and push to registry (base image)
+      const imageUri = await this.buildAndPushImage({
+        folder: options.folder,
+        dockerfile: options.dockerfile,
+        name: options.name
+      }, containerGroupName);
+      
+      // Create container group configuration with registry credentials
+      const containerGroupSpec = {
+        location: config.location || 'eastus',
+        containers: [
+          {
+            name: instanceName,
+            image: imageUri,
+            resources: {
+              requests: {
+                cpu: 1,
+                memoryInGB: 1.5
+              }
+            },
+            ports: [
+              {
+                protocol: 'TCP',
+                port: 8080
+              }
+            ],
+            environmentVariables: [
+              {
+                name: 'NODE_ENV',
+                value: 'production'
+              },
+              {
+                name: 'PORT',
+                value: '8080'
+              }
+            ]
+          }
+        ],
+        osType: 'Linux',
+        imageRegistryCredentials: await this.getImageRegistryCredentials(config),
+        ipAddress: {
+          type: 'Public',
+          ports: [
+            {
+              protocol: 'TCP',
+              port: 8080
+            }
+          ]
+        },
+        restartPolicy: 'OnFailure'
+      };
+
+      // Create container group (but don't wait for full deployment)
+      await client.containerGroups.beginCreateOrUpdate(
+        config.resourceGroup,
+        containerGroupName,
+        containerGroupSpec
+      );
+
+      // Update instance status to ready (container group created, image built)
+      instance.status = SandboxStatus.READY;
+      
+      return instance;
+
+    } catch (error) {
+      instance.status = SandboxStatus.ERROR;
+      throw new Error(`Azure ACI sandbox creation failed: ${error}`);
+    }
+  }
+
+  async deployToSandbox(sandboxId: string, options: DeployOptions): Promise<DeploymentResult> {
+    const client = await this.initializeClient();
+    const config = await this.configManager.getProviderConfig(this.name);
+    
+    if (!config) {
+      throw new Error('Azure provider configuration not found');
+    }
+    
+    try {
+      const containerGroupName = sandboxId.includes('-cg') ? sandboxId : `${sandboxId}-cg`;
+      
+      // Build new image with updated code
+      let imageUri: string;
+      if (options.dockerfile) {
+        // Full rebuild with new Dockerfile
+        imageUri = await this.buildAndPushImage({
+          folder: options.folder,
+          dockerfile: options.dockerfile
+        }, `${containerGroupName}-${Date.now()}`);
+      } else {
+        // Incremental update - build new image with same Dockerfile
+        const existingGroup = await client.containerGroups.get(config.resourceGroup, containerGroupName);
+        const baseName = containerGroupName.replace('-cg', '');
+        imageUri = await this.buildAndPushImage({
+          folder: options.folder,
+          dockerfile: path.join(options.folder, 'Dockerfile') // Assume Dockerfile in folder
+        }, `${baseName}-${Date.now()}`);
+      }
+      
+      // Update container group with new image
+      const existingGroup = await client.containerGroups.get(config.resourceGroup, containerGroupName);
+      
+      if (existingGroup.containers && existingGroup.containers.length > 0) {
+        existingGroup.containers[0].image = imageUri;
+        
+        // Update the container group
+        const deploymentResult = await client.containerGroups.beginCreateOrUpdateAndWait(
+          config.resourceGroup,
+          containerGroupName,
+          existingGroup
+        );
+        
+        const instance: SandboxInstance = {
+          id: containerGroupName,
+          name: containerGroupName.replace('-cg', ''),
+          status: SandboxStatus.DEPLOYED,
+          provider: this.name,
+          createdAt: new Date(Date.now()),
+          url: this.getContainerUrl(deploymentResult)
+        };
+
+        return {
+          instance,
+          logs: [
+            'New container image built and pushed',
+            'Container group updated with new image',
+            'Application redeployed successfully'
+          ]
+        };
+      } else {
+        throw new Error('Container group has no containers to update');
+      }
+
+    } catch (error) {
+      throw new Error(`Azure ACI deployment to sandbox failed: ${error}`);
+    }
+  }
+
+  async getSandbox(sandboxId: string): Promise<SandboxInstance> {
+    const client = await this.initializeClient();
+    const config = await this.configManager.getProviderConfig(this.name);
+    
+    if (!config) {
+      throw new Error('Azure provider configuration not found');
+    }
+    
+    try {
+      const containerGroupName = sandboxId.includes('-cg') ? sandboxId : `${sandboxId}-cg`;
+      const containerGroup = await client.containerGroups.get(config.resourceGroup, containerGroupName);
+      
+      return {
+        id: containerGroup.name || sandboxId,
+        name: containerGroup.name?.replace('-cg', '') || 'Unknown',
+        status: this.mapAzureStatus(containerGroup.instanceView?.state),
+        provider: this.name,
+        createdAt: new Date(Date.now()),
+        url: this.getContainerUrl(containerGroup)
+      };
+
+    } catch (error) {
+      throw new Error(`Failed to get Azure ACI sandbox: ${error}`);
+    }
   }
 
   private mapAzureStatus(azureState: string | undefined): SandboxInstance['status'] {

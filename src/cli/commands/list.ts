@@ -16,6 +16,9 @@ export async function listCommand(): Promise<void> {
       return;
     }
     
+    // Get current sandbox for highlighting
+    const currentSandboxId = await configManager.getCurrentSandbox();
+    
     let totalSandboxes = 0;
     
     for (const providerName of providerNames) {
@@ -32,19 +35,36 @@ export async function listCommand(): Promise<void> {
         if (instances.length > 0) {
           console.log(chalk.green(`\n${providerName.toUpperCase()} Sandboxes:`));
           
-          instances.forEach(instance => {
-            const statusColor = instance.status === 'running' ? chalk.green : 
+          for (const instance of instances) {
+            const statusColor = instance.status === 'running' || instance.status === 'deployed' ? chalk.green : 
                                instance.status === 'error' ? chalk.red : 
                                chalk.yellow;
             
-            console.log(`  ${chalk.cyan(instance.id)} - ${instance.name}`);
+            const isCurrent = instance.id === currentSandboxId;
+            const currentIndicator = isCurrent ? chalk.cyan(' ← CURRENT') : '';
+            const nameColor = isCurrent ? chalk.cyan.bold : chalk.cyan;
+            
+            console.log(`  ${nameColor(instance.id)} - ${instance.name}${currentIndicator}`);
             console.log(`    Status: ${statusColor(instance.status)}`);
             console.log(`    Created: ${instance.createdAt.toLocaleDateString()}`);
+            
+            // Show additional metadata if available
+            const sandboxMetadata = await configManager.getSandboxMetadata(instance.id);
+            if (sandboxMetadata) {
+              console.log(`    Deployments: ${sandboxMetadata.deploymentCount}`);
+              if (sandboxMetadata.lastDeployedAt) {
+                console.log(`    Last Deployed: ${new Date(sandboxMetadata.lastDeployedAt).toLocaleDateString()}`);
+              }
+              if (sandboxMetadata.sourceFolder) {
+                console.log(`    Source: ${chalk.gray(sandboxMetadata.sourceFolder)}`);
+              }
+            }
+            
             if (instance.url) {
               console.log(`    URL: ${chalk.blue(instance.url)}`);
             }
             console.log('');
-          });
+          }
           
           totalSandboxes += instances.length;
         }
@@ -56,8 +76,16 @@ export async function listCommand(): Promise<void> {
     
     if (totalSandboxes === 0) {
       console.log(chalk.gray('No active sandboxes found'));
+      console.log(chalk.gray('💡 Create your first sandbox with: ') + chalk.white('create <folder>'));
     } else {
       console.log(chalk.green(`\nTotal: ${totalSandboxes} sandbox${totalSandboxes > 1 ? 'es' : ''}`));
+      
+      if (currentSandboxId) {
+        console.log(chalk.cyan(`Current: ${currentSandboxId}`));
+      } else {
+        console.log(chalk.yellow('No current sandbox selected'));
+        console.log(chalk.gray('💡 Select one with: ') + chalk.white('select'));
+      }
     }
     
   } catch (error) {
