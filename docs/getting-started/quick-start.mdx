@@ -1,0 +1,348 @@
+---
+title: 'Quick Start'
+description: 'Deploy your first application in minutes'
+---
+
+## Overview
+
+This guide will walk you through deploying your first application using Sandbox CLI. We'll use a simple Node.js application and deploy it to Daytona.
+
+<Info>
+  **Estimated time:** 5-10 minutes
+  
+  **Prerequisites:** Sandbox CLI installed and Docker running
+</Info>
+
+## Step 1: Initialize Configuration
+
+First, initialize your CLI configuration:
+
+```bash
+npm run cli init
+```
+
+This will prompt you to select a default provider. Choose **Daytona** for this quick start.
+
+## Step 2: Configure Daytona Provider
+
+Configure the Daytona provider with your credentials:
+
+```bash
+npm run cli configure daytona
+```
+
+You'll be prompted for:
+- **API Key**: Get this from your Daytona dashboard
+- **Server URL**: Use default `https://app.daytona.io/api`
+- **Target region**: Use default `eu`
+
+<Tip>
+  Don't have a Daytona account? Sign up at [daytona.io](https://daytona.io) to get your API key.
+</Tip>
+
+## Step 3: Prepare Your Application
+
+For this quick start, we'll create a simple Node.js application:
+
+<CodeGroup>
+```bash Create Project Directory
+mkdir my-first-app
+cd my-first-app
+```
+
+```json package.json
+{
+  "name": "my-first-app",
+  "version": "1.0.0",
+  "description": "My first Sandbox CLI app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.0"
+  }
+}
+```
+
+```javascript index.js
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 8080;
+
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Hello from Sandbox CLI!',
+    timestamp: new Date().toISOString(),
+    environment: 'sandbox'
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy' });
+});
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running on port ${port}`);
+});
+```
+
+```dockerfile Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install --production
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
+
+# Start the application
+CMD ["npm", "start"]
+```
+</CodeGroup>
+
+## Step 4: Create Your Sandbox
+
+Create a new sandbox environment:
+
+```bash
+npm run cli create ./my-first-app --provider daytona
+```
+
+<Info>
+  This command will:
+  - Build your Docker image
+  - Create a new sandbox environment
+  - Set it as your current active sandbox
+</Info>
+
+You should see output similar to:
+```
+🏗️  Creating sandbox for ./my-first-app...
+✅ Sandbox created and selected!
+   Provider: daytona
+   Sandbox ID: daytona-1234567890-abc123
+   Name: my-first-app-1234567890
+   Status: ready
+   Source Folder: /path/to/my-first-app
+   Dockerfile: /path/to/my-first-app/Dockerfile
+```
+
+## Step 5: Deploy Your Code
+
+Deploy your application to the sandbox:
+
+```bash
+npm run cli deploy ./my-first-app
+```
+
+The deployment process will:
+- Upload your code to the sandbox
+- Build and start your application
+- Provide you with an access URL
+
+Expected output:
+```
+🚀 Deploying ./my-first-app to current sandbox...
+✅ Code deployed to sandbox!
+   Sandbox ID: daytona-1234567890-abc123
+   Name: my-first-app-1234567890
+   Provider: daytona
+   Status: deployed
+🌐 Application URL: https://sandbox-abc123.proxy.daytona.work
+```
+
+## Step 6: Access Your Application
+
+<Tabs>
+  <Tab title="Browser">
+    Click on the provided URL or copy it to your browser:
+    ```
+    https://sandbox-abc123.proxy.daytona.work
+    ```
+    
+    You should see your JSON response:
+    ```json
+    {
+      "message": "Hello from Sandbox CLI!",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "environment": "sandbox"
+    }
+    ```
+  </Tab>
+  
+  <Tab title="CLI Browse">
+    Use the browse command to open automatically:
+    ```bash
+    npm run cli browse <your-sandbox-id>
+    ```
+  </Tab>
+  
+  <Tab title="curl">
+    Test with curl:
+    ```bash
+    curl https://sandbox-abc123.proxy.daytona.work
+    curl https://sandbox-abc123.proxy.daytona.work/health
+    ```
+  </Tab>
+</Tabs>
+
+## Step 7: Execute Commands (Optional)
+
+You can run commands directly in your sandbox:
+
+<CodeGroup>
+```bash Check Application Status
+npm run cli execute "ps aux | grep node"
+```
+
+```bash View Application Logs
+npm run cli execute "npm run start" --timeout 10
+```
+
+```bash Install Additional Packages
+npm run cli execute "npm install lodash"
+```
+
+```bash Check File System
+npm run cli execute "ls -la /workspaces/project"
+```
+</CodeGroup>
+
+## Step 8: Manage Your Sandboxes
+
+<Tabs>
+  <Tab title="List Sandboxes">
+    View all your sandboxes:
+    ```bash
+    npm run cli list
+    ```
+    
+    Output shows current sandbox marked with `← CURRENT`:
+    ```
+    DAYTONA Sandboxes:
+      daytona-1234567890-abc123 - my-first-app-1234567890 ← CURRENT
+        Status: deployed
+        Created: 1/15/2024
+        Deployments: 1
+        URL: https://sandbox-abc123.proxy.daytona.work
+    ```
+  </Tab>
+  
+  <Tab title="Switch Sandboxes">
+    If you have multiple sandboxes:
+    ```bash
+    npm run cli select
+    ```
+    
+    Choose from the interactive list.
+  </Tab>
+  
+  <Tab title="Clean Up">
+    When you're done, destroy the sandbox:
+    ```bash
+    npm run cli destroy <sandbox-id>
+    ```
+    
+    <Warning>
+      This will permanently delete your sandbox and all data.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Development Workflow
+
+Now that you have a working sandbox, here's the typical development workflow:
+
+<Steps>
+  <Step title="Make Code Changes">
+    Edit your application files locally
+  </Step>
+  
+  <Step title="Deploy Updates">
+    ```bash
+    npm run cli deploy ./my-first-app
+    ```
+    This is much faster than the initial creation!
+  </Step>
+  
+  <Step title="Test Changes">
+    Access your updated application via the same URL
+  </Step>
+  
+  <Step title="Debug if Needed">
+    ```bash
+    npm run cli execute "npm run start"
+    npm run cli execute "cat /workspaces/project/package.json"
+    ```
+  </Step>
+</Steps>
+
+## Next Steps
+
+Congratulations! You've successfully deployed your first application with Sandbox CLI. Here's what to explore next:
+
+<CardGroup cols={2}>
+  <Card
+    title="Try Other Providers"
+    icon="cloud"
+    href="/providers/azure-aci"
+  >
+    Deploy to Azure Container Instances
+  </Card>
+  <Card
+    title="Advanced Commands"
+    icon="terminal"
+    href="/commands/execute"
+  >
+    Master command execution
+  </Card>
+  <Card
+    title="Best Practices"
+    icon="star"
+    href="/guides/best-practices"
+  >
+    Learn optimization tips
+  </Card>
+  <Card
+    title="Troubleshooting"
+    icon="wrench"
+    href="/guides/troubleshooting"
+  >
+    Solve common issues
+  </Card>
+</CardGroup>
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Sandbox creation fails">
+    - Check your Daytona API key and credentials
+    - Ensure Docker is running
+    - Verify your Dockerfile syntax
+  </Accordion>
+  
+  <Accordion title="Application not accessible">
+    - Wait a few moments for deployment to complete
+    - Check if your app listens on `0.0.0.0:8080`
+    - Verify the EXPOSE directive in your Dockerfile
+  </Accordion>
+  
+  <Accordion title="Deploy command fails">
+    - Ensure you have a current sandbox selected
+    - Check that your source folder exists
+    - Verify sandbox is still running with `npm run cli list`
+  </Accordion>
+</AccordionGroup>

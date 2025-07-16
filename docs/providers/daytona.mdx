@@ -1,0 +1,528 @@
+---
+title: 'Daytona Provider'
+description: 'Fast development environments with instant setup'
+---
+
+## Overview
+
+Daytona is a cloud development environment platform that provides instant, fully-configured development environments. The Daytona provider in Sandbox CLI offers the fastest way to get your applications running in the cloud.
+
+<CardGroup cols={2}>
+  <Card
+    title="Lightning Fast"
+    icon="bolt"
+  >
+    Environments ready in 30-60 seconds
+  </Card>
+  <Card
+    title="Full Command Support"
+    icon="terminal"
+  >
+    Real-time command execution with streaming
+  </Card>
+  <Card
+    title="Developer Focused"
+    icon="code"
+  >
+    Built specifically for development workflows
+  </Card>
+  <Card
+    title="Easy Setup"
+    icon="rocket"
+  >
+    Minimal configuration required
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+Before using the Daytona provider, you'll need:
+
+<Steps>
+  <Step title="Daytona Account">
+    Sign up for a free account at [daytona.io](https://daytona.io)
+  </Step>
+  
+  <Step title="API Key">
+    Generate an API key from your Daytona dashboard
+  </Step>
+  
+  <Step title="Docker">
+    Ensure Docker is installed and running locally
+  </Step>
+</Steps>
+
+## Configuration
+
+### Quick Setup
+
+<CodeGroup>
+```bash Interactive Configuration
+npm run cli configure daytona
+```
+
+```bash Manual Configuration
+# Edit ~/.sandbox-cli/config.json
+{
+  "providers": {
+    "daytona": {
+      "apiKey": "dt_your_api_key_here",
+      "serverUrl": "https://app.daytona.io/api",
+      "target": "eu"
+    }
+  }
+}
+```
+</CodeGroup>
+
+### Configuration Parameters
+
+<ParamField path="apiKey" type="string" required>
+  Your Daytona API key (starts with `dt_`)
+</ParamField>
+
+<ParamField path="serverUrl" type="string" default="https://app.daytona.io/api">
+  Daytona server URL
+</ParamField>
+
+<ParamField path="target" type="string" default="eu">
+  Target region for your workspaces
+</ParamField>
+
+### Getting Your API Key
+
+<Steps>
+  <Step title="Login to Daytona">
+    Visit [app.daytona.io](https://app.daytona.io) and log in
+  </Step>
+  
+  <Step title="Navigate to Settings">
+    Go to Settings → API Keys in the dashboard
+  </Step>
+  
+  <Step title="Create API Key">
+    Click "Create New API Key" and give it a descriptive name
+  </Step>
+  
+  <Step title="Copy Key">
+    Copy the generated key (it starts with `dt_`)
+  </Step>
+</Steps>
+
+<Warning>
+  Store your API key securely. It provides full access to your Daytona account.
+</Warning>
+
+## Usage
+
+### Creating Your First Sandbox
+
+<CodeGroup>
+```bash With Default Provider
+npm run cli create ./my-app
+```
+
+```bash Explicit Provider
+npm run cli create ./my-app --provider daytona
+```
+
+```bash Custom Dockerfile
+npm run cli create ./my-app --provider daytona --dockerfile ./custom.Dockerfile
+```
+</CodeGroup>
+
+### Deployment Workflow
+
+<Steps>
+  <Step title="Initial Creation">
+    ```bash
+    npm run cli create ./my-app --provider daytona
+    ```
+    
+    This process:
+    - Builds your Docker image
+    - Creates a Daytona workspace
+    - Deploys your application
+    - Provides an access URL
+  </Step>
+  
+  <Step title="Iterative Development">
+    ```bash
+    npm run cli deploy ./my-app
+    ```
+    
+    Subsequent deployments are much faster:
+    - Uploads only changed files
+    - Rebuilds application in existing workspace
+    - Maintains the same URL
+  </Step>
+  
+  <Step title="Command Execution">
+    ```bash
+    npm run cli execute "npm install"
+    npm run cli execute "npm run build"
+    npm run cli execute "npm test"
+    ```
+  </Step>
+</Steps>
+
+## Features
+
+### Command Execution
+
+Daytona provides full command execution support with real-time streaming:
+
+<Tabs>
+  <Tab title="Development Commands">
+    ```bash
+    # Package management
+    npm run cli execute "npm install"
+    npm run cli execute "npm update"
+    npm run cli execute "yarn add lodash"
+    
+    # Build and test
+    npm run cli execute "npm run build"
+    npm run cli execute "npm test"
+    npm run cli execute "npm run lint"
+    ```
+  </Tab>
+  
+  <Tab title="System Commands">
+    ```bash
+    # File operations
+    npm run cli execute "ls -la"
+    npm run cli execute "find . -name '*.js'"
+    npm run cli execute "cat package.json"
+    
+    # Process management
+    npm run cli execute "ps aux"
+    npm run cli execute "top -n 1"
+    npm run cli execute "htop" --timeout 30
+    ```
+  </Tab>
+  
+  <Tab title="Git Operations">
+    ```bash
+    # Repository status
+    npm run cli execute "git status"
+    npm run cli execute "git log --oneline -10"
+    npm run cli execute "git branch"
+    
+    # Repository updates
+    npm run cli execute "git pull origin main"
+    npm run cli execute "git fetch --all"
+    ```
+  </Tab>
+</Tabs>
+
+### Networking and Access
+
+<AccordionGroup>
+  <Accordion title="Automatic URL Generation">
+    Daytona automatically generates secure HTTPS URLs for your applications:
+    
+    **Format**: `https://sandbox-{id}.proxy.daytona.work`
+    
+    **Features**:
+    - Valid SSL certificates
+    - Automatic port 8080 exposure
+    - No additional configuration required
+  </Accordion>
+  
+  <Accordion title="Port Configuration">
+    Your application should listen on port 8080 for automatic exposure:
+    
+    ```dockerfile
+    # In your Dockerfile
+    EXPOSE 8080
+    
+    # In your application
+    const port = process.env.PORT || 8080;
+    app.listen(port, '0.0.0.0');
+    ```
+  </Accordion>
+  
+  <Accordion title="Custom Domains">
+    Custom domains are available in Daytona's paid plans. Contact Daytona support for setup.
+  </Accordion>
+</AccordionGroup>
+
+### Performance Characteristics
+
+<table>
+  <thead>
+    <tr>
+      <th>Operation</th>
+      <th>Time</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>**Initial Creation**</td>
+      <td>30-60 seconds</td>
+      <td>Includes image build and workspace setup</td>
+    </tr>
+    <tr>
+      <td>**Subsequent Deploys**</td>
+      <td>10-20 seconds</td>
+      <td>File sync and application restart</td>
+    </tr>
+    <tr>
+      <td>**Command Execution**</td>
+      <td>Near instant</td>
+      <td>Real-time streaming output</td>
+    </tr>
+    <tr>
+      <td>**URL Access**</td>
+      <td>Immediate</td>
+      <td>No DNS propagation delay</td>
+    </tr>
+  </tbody>
+</table>
+
+## Best Practices
+
+### Dockerfile Optimization
+
+<Tabs>
+  <Tab title="Multi-stage Builds">
+    ```dockerfile
+    # Build stage
+    FROM node:18-alpine AS builder
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm ci --only=production
+    
+    # Runtime stage
+    FROM node:18-alpine
+    WORKDIR /app
+    COPY --from=builder /app/node_modules ./node_modules
+    COPY . .
+    EXPOSE 8080
+    CMD ["npm", "start"]
+    ```
+  </Tab>
+  
+  <Tab title="Layer Caching">
+    ```dockerfile
+    FROM node:18-alpine
+    WORKDIR /app
+    
+    # Copy package files first for better caching
+    COPY package*.json ./
+    RUN npm install
+    
+    # Copy source code last
+    COPY . .
+    
+    EXPOSE 8080
+    CMD ["npm", "start"]
+    ```
+  </Tab>
+  
+  <Tab title="Health Checks">
+    ```dockerfile
+    FROM node:18-alpine
+    WORKDIR /app
+    
+    COPY package*.json ./
+    RUN npm install
+    COPY . .
+    
+    EXPOSE 8080
+    
+    # Add health check
+    HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+      CMD curl -f http://localhost:8080/health || exit 1
+    
+    CMD ["npm", "start"]
+    ```
+  </Tab>
+</Tabs>
+
+### Development Workflow
+
+<Steps>
+  <Step title="Create Once">
+    ```bash
+    npm run cli create ./my-app --provider daytona
+    ```
+    
+    Create your sandbox once and reuse it for development.
+  </Step>
+  
+  <Step title="Deploy Frequently">
+    ```bash
+    npm run cli deploy ./my-app
+    ```
+    
+    Deploy changes frequently during development.
+  </Step>
+  
+  <Step title="Execute Commands">
+    ```bash
+    npm run cli execute "npm test"
+    npm run cli execute "npm run lint"
+    ```
+    
+    Use command execution for testing and debugging.
+  </Step>
+  
+  <Step title="Monitor and Debug">
+    ```bash
+    npm run cli execute "tail -f /var/log/app.log" --timeout 60
+    npm run cli execute "ps aux | grep node"
+    ```
+  </Step>
+</Steps>
+
+### Resource Management
+
+<Tip>
+  **Keep active sandboxes running** during development sessions. Creating new sandboxes takes longer than deploying to existing ones.
+</Tip>
+
+<Warning>
+  **Clean up unused sandboxes** regularly to avoid unnecessary resource usage and costs.
+</Warning>
+
+<Info>
+  **Use meaningful names** for your projects to easily identify sandboxes in the Daytona dashboard.
+</Info>
+
+## Troubleshooting
+
+### Common Issues
+
+<AccordionGroup>
+  <Accordion title="Invalid API Key">
+    **Symptoms**: Authentication errors, "Invalid API key" messages
+    
+    **Solutions**:
+    - Verify API key in Daytona dashboard
+    - Ensure key starts with `dt_`
+    - Check for extra spaces or characters
+    - Regenerate API key if necessary
+    
+    ```bash
+    npm run cli configure daytona
+    ```
+  </Accordion>
+  
+  <Accordion title="Sandbox Creation Fails">
+    **Symptoms**: Timeout errors, creation failures
+    
+    **Solutions**:
+    - Check Daytona service status
+    - Verify your subscription limits
+    - Ensure Dockerfile is valid
+    - Check Docker is running locally
+    
+    ```bash
+    docker info  # Verify Docker is running
+    ```
+  </Accordion>
+  
+  <Accordion title="Application Not Accessible">
+    **Symptoms**: URL returns 404 or connection errors
+    
+    **Solutions**:
+    - Ensure app listens on `0.0.0.0:8080`
+    - Check EXPOSE directive in Dockerfile
+    - Verify application starts successfully
+    - Wait a few moments for deployment to complete
+    
+    ```bash
+    npm run cli execute "netstat -tulpn | grep 8080"
+    npm run cli execute "curl http://localhost:8080"
+    ```
+  </Accordion>
+  
+  <Accordion title="Command Execution Fails">
+    **Symptoms**: Commands timeout or fail to execute
+    
+    **Solutions**:
+    - Check sandbox is running: `npm run cli list`
+    - Verify command syntax
+    - Increase timeout for long-running commands
+    - Check workspace permissions
+    
+    ```bash
+    npm run cli execute "pwd && whoami"
+    npm run cli execute "ls -la /workspaces/project"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Performance Issues
+
+<AccordionGroup>
+  <Accordion title="Slow Build Times">
+    **Solutions**:
+    - Optimize Dockerfile layer caching
+    - Use multi-stage builds
+    - Minimize image size
+    - Use .dockerignore file
+  </Accordion>
+  
+  <Accordion title="Slow File Sync">
+    **Solutions**:
+    - Exclude unnecessary files (.git, node_modules, etc.)
+    - Use .gitignore patterns
+    - Deploy only changed files when possible
+  </Accordion>
+</AccordionGroup>
+
+## Pricing and Limits
+
+<Info>
+  Daytona offers various pricing tiers. Check [daytona.io/pricing](https://daytona.io/pricing) for current plans and limits.
+</Info>
+
+### Free Tier Limitations
+
+- Limited workspace hours per month
+- Shared resources
+- Community support
+
+### Paid Tier Benefits
+
+- Unlimited workspace hours
+- Dedicated resources
+- Priority support
+- Custom domains
+- Team collaboration features
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start Guide"
+    icon="play"
+    href="/getting-started/quick-start"
+  >
+    Deploy your first app with Daytona
+  </Card>
+  <Card
+    title="Execute Commands"
+    icon="terminal"
+    href="/commands/execute"
+  >
+    Master command execution
+  </Card>
+  <Card
+    title="Compare Providers"
+    icon="balance-scale"
+    href="/providers/overview"
+  >
+    See how Daytona compares to other providers
+  </Card>
+  <Card
+    title="Best Practices"
+    icon="star"
+    href="/guides/best-practices"
+  >
+    Optimize your Daytona workflow
+  </Card>
+</CardGroup>

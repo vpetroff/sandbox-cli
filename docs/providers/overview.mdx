@@ -1,0 +1,319 @@
+---
+title: 'Providers Overview'
+description: 'Choose the right cloud provider for your sandbox environments'
+---
+
+## What are Providers?
+
+Providers are cloud platforms where Sandbox CLI deploys your applications. Each provider offers different features, pricing models, and capabilities to suit various development needs.
+
+<CardGroup cols={3}>
+  <Card
+    title="Daytona"
+    icon="rocket"
+    href="/providers/daytona"
+  >
+    Fast development environments with instant setup
+  </Card>
+  <Card
+    title="Azure Container Instances"
+    icon="microsoft"
+    href="/providers/azure-aci"
+  >
+    Enterprise-grade containers with Azure integration
+  </Card>
+  <Card
+    title="E2B"
+    icon="code"
+    href="/providers/e2b"
+  >
+    Secure sandboxed environments (Coming Soon)
+  </Card>
+</CardGroup>
+
+## Provider Comparison
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Daytona</th>
+      <th>Azure ACI</th>
+      <th>E2B</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>**Setup Speed**</td>
+      <td>⚡ Very Fast</td>
+      <td>🔄 Moderate</td>
+      <td>🚧 Coming Soon</td>
+    </tr>
+    <tr>
+      <td>**Command Execution**</td>
+      <td>✅ Full Support</td>
+      <td>❌ Limited</td>
+      <td>🚧 Planned</td>
+    </tr>
+    <tr>
+      <td>**Enterprise Features**</td>
+      <td>🔄 Basic</td>
+      <td>✅ Advanced</td>
+      <td>🚧 Unknown</td>
+    </tr>
+    <tr>
+      <td>**Pricing**</td>
+      <td>💰 Usage-based</td>
+      <td>💰 Pay-per-use</td>
+      <td>🚧 TBD</td>
+    </tr>
+    <tr>
+      <td>**Best For**</td>
+      <td>Quick prototyping</td>
+      <td>Production-like testing</td>
+      <td>Secure development</td>
+    </tr>
+  </tbody>
+</table>
+
+## Choosing the Right Provider
+
+### Use Daytona When:
+
+<Check>**Rapid Development**: You need environments up and running in seconds</Check>
+<Check>**Interactive Development**: You frequently run commands in your sandbox</Check>
+<Check>**Simple Setup**: You want minimal configuration overhead</Check>
+<Check>**Experimentation**: You're prototyping or testing new ideas</Check>
+
+### Use Azure Container Instances When:
+
+<Check>**Enterprise Environment**: You're working within Azure ecosystem</Check>
+<Check>**Production-like Testing**: You need environments similar to production</Check>
+<Check>**Compliance Requirements**: You need enterprise security and compliance</Check>
+<Check>**Resource Control**: You need fine-grained control over compute resources</Check>
+
+### Use E2B When (Coming Soon):
+
+<Check>**Security First**: You need maximum isolation and security</Check>
+<Check>**Code Execution**: You're running untrusted or experimental code</Check>
+<Check>**Sandboxed Development**: You need completely isolated environments</Check>
+
+## Provider Features
+
+### Command Execution Support
+
+<Tabs>
+  <Tab title="Daytona">
+    **✅ Full Support**
+    - Real-time output streaming
+    - Interactive command execution
+    - Working directory support
+    - Signal handling (Ctrl+C)
+    - Exit code preservation
+    
+    ```bash
+    npm run cli execute "npm install"
+    npm run cli execute "npm run build"
+    npm run cli execute "ps aux" --timeout 60
+    ```
+  </Tab>
+  
+  <Tab title="Azure ACI">
+    **❌ Limited Support**
+    - Basic command execution planned
+    - Currently not fully implemented
+    - Azure exec API limitations
+    
+    <Warning>
+      Command execution in Azure Container Instances is not yet fully supported. Use Daytona for interactive development.
+    </Warning>
+  </Tab>
+  
+  <Tab title="E2B">
+    **🚧 Planned**
+    - Secure command execution
+    - Sandboxed environment
+    - Real-time streaming planned
+    
+    <Info>
+      E2B provider is currently in development. Command execution will be available in a future release.
+    </Info>
+  </Tab>
+</Tabs>
+
+### Deployment Speed
+
+<AccordionGroup>
+  <Accordion title="Daytona - Very Fast">
+    - **Initial deployment**: 30-60 seconds
+    - **Subsequent deployments**: 10-20 seconds
+    - **Optimized for**: Development iteration speed
+    
+    Perfect for rapid development cycles where you deploy frequently.
+  </Accordion>
+  
+  <Accordion title="Azure ACI - Moderate">
+    - **Initial deployment**: 2-5 minutes
+    - **Subsequent deployments**: 1-3 minutes
+    - **Optimized for**: Production-like environments
+    
+    Takes longer due to enterprise-grade provisioning and security checks.
+  </Accordion>
+  
+  <Accordion title="E2B - Unknown">
+    Deployment speed characteristics will be documented when the provider is available.
+  </Accordion>
+</AccordionGroup>
+
+## Multi-Provider Workflows
+
+You can use multiple providers in the same project:
+
+<Steps>
+  <Step title="Configure Multiple Providers">
+    ```bash
+    npm run cli configure daytona
+    npm run cli configure azure
+    ```
+  </Step>
+  
+  <Step title="Create Environment-Specific Sandboxes">
+    ```bash
+    # Quick development environment
+    npm run cli create ./my-app --provider daytona
+    
+    # Production-like testing environment
+    npm run cli create ./my-app --provider azure
+    ```
+  </Step>
+  
+  <Step title="Switch Between Environments">
+    ```bash
+    npm run cli select
+    # Choose the sandbox you want to work with
+    ```
+  </Step>
+</Steps>
+
+## Provider-Specific Considerations
+
+### Networking and Access
+
+<Tabs>
+  <Tab title="Daytona">
+    - **URL Format**: `https://sandbox-{id}.proxy.daytona.work`
+    - **Port Access**: Automatic port 8080 exposure
+    - **SSL**: Automatic HTTPS with valid certificates
+    - **Custom Domains**: Available in paid plans
+  </Tab>
+  
+  <Tab title="Azure ACI">
+    - **URL Format**: `http://{ip}:8080`
+    - **Port Access**: Configurable port exposure
+    - **SSL**: Manual setup required
+    - **Custom Domains**: Requires Azure Front Door or Application Gateway
+  </Tab>
+</Tabs>
+
+### Resource Limits
+
+<Tabs>
+  <Tab title="Daytona">
+    - **CPU**: Varies by plan
+    - **Memory**: Varies by plan
+    - **Storage**: Ephemeral, varies by plan
+    - **Network**: Shared bandwidth
+  </Tab>
+  
+  <Tab title="Azure ACI">
+    - **CPU**: 0.1 to 4 vCPUs (configurable)
+    - **Memory**: 0.1 to 16 GB (configurable)
+    - **Storage**: Persistent volumes available
+    - **Network**: Dedicated IP addresses
+  </Tab>
+</Tabs>
+
+## Getting Started with Providers
+
+<CardGroup cols={2}>
+  <Card
+    title="Start with Daytona"
+    icon="play"
+    href="/providers/daytona"
+  >
+    Quick setup for immediate development
+  </Card>
+  <Card
+    title="Enterprise with Azure"
+    icon="building"
+    href="/providers/azure-aci"
+  >
+    Production-grade environments
+  </Card>
+</CardGroup>
+
+## Migration Between Providers
+
+Moving between providers is straightforward:
+
+<Steps>
+  <Step title="Export Your Application">
+    Your application code remains the same across providers
+  </Step>
+  
+  <Step title="Configure New Provider">
+    ```bash
+    npm run cli configure <new-provider>
+    ```
+  </Step>
+  
+  <Step title="Create New Sandbox">
+    ```bash
+    npm run cli create ./my-app --provider <new-provider>
+    ```
+  </Step>
+  
+  <Step title="Deploy and Test">
+    ```bash
+    npm run cli deploy ./my-app
+    ```
+  </Step>
+  
+  <Step title="Clean Up Old Sandbox">
+    ```bash
+    npm run cli destroy <old-sandbox-id>
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+  Keep both sandboxes running during migration to compare behavior and performance.
+</Tip>
+
+## Next Steps
+
+Ready to dive deeper into a specific provider?
+
+<CardGroup cols={3}>
+  <Card
+    title="Daytona Setup"
+    icon="rocket"
+    href="/providers/daytona"
+  >
+    Fast development environments
+  </Card>
+  <Card
+    title="Azure ACI Setup"
+    icon="microsoft"
+    href="/providers/azure-aci"
+  >
+    Enterprise container instances
+  </Card>
+  <Card
+    title="E2B Preview"
+    icon="code"
+    href="/providers/e2b"
+  >
+    Secure sandboxed environments
+  </Card>
+</CardGroup>

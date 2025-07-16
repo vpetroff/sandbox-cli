@@ -1,0 +1,110 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Sandbox CLI",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373",
+    "anchors": {
+      "from": "#0D9373",
+      "to": "#07C983"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:support@sandbox-cli.dev"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "GitHub",
+    "url": "https://github.com/your-username/sandbox-cli"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "Documentation",
+      "icon": "book-open-cover",
+      "url": "https://mintlify.com/docs"
+    },
+    {
+      "name": "Community",
+      "icon": "slack",
+      "url": "https://mintlify.com/community"
+    },
+    {
+      "name": "Blog",
+      "icon": "newspaper",
+      "url": "https://mintlify.com/blog"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": [
+        "introduction",
+        "getting-started/installation",
+        "getting-started/quick-start",
+        "getting-started/configuration"
+      ]
+    },
+    {
+      "group": "Providers",
+      "pages": [
+        "providers/overview",
+        "providers/daytona",
+        "providers/azure-aci",
+        "providers/e2b"
+      ]
+    },
+    {
+      "group": "Commands",
+      "pages": [
+        "commands/overview",
+        "commands/create",
+        "commands/deploy",
+        "commands/execute",
+        "commands/list",
+        "commands/select",
+        "commands/browse",
+        "commands/destroy"
+      ]
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        "guides/workflows",
+        "guides/troubleshooting",
+        "guides/best-practices"
+      ]
+    },
+    {
+      "group": "Examples",
+      "pages": [
+        "examples/node-app",
+        "examples/python-app",
+        "examples/docker-compose"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/providers"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/your-username/sandbox-cli",
+    "linkedin": "https://www.linkedin.com/company/mintlify"
+  }
+}

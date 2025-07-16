@@ -1,0 +1,503 @@
+---
+title: 'Execute Command'
+description: 'Run commands directly in your sandbox environments'
+---
+
+## Overview
+
+The `execute` command allows you to run commands directly in your deployed sandbox environments without needing SSH or other remote access tools. It's perfect for debugging, testing, and managing your applications.
+
+<Info>
+  **Provider Support**: Currently available for Daytona with full real-time streaming. Azure ACI support is limited and E2B support is coming soon.
+</Info>
+
+## Basic Syntax
+
+```bash
+npm run cli execute "<command>" [options]
+```
+
+### Options
+
+<ParamField path="command" type="string" required>
+  The command to execute in the sandbox environment
+</ParamField>
+
+<ParamField path="--cwd" type="string" default="/workspaces/project">
+  Working directory for command execution
+</ParamField>
+
+<ParamField path="--timeout" type="number" default="300">
+  Command timeout in seconds
+</ParamField>
+
+<ParamField path="--no-stream" type="boolean" default="false">
+  Disable real-time output streaming, return all output at once
+</ParamField>
+
+## Quick Examples
+
+<CodeGroup>
+```bash Basic Commands
+npm run cli execute "ls -la"
+npm run cli execute "pwd"
+npm run cli execute "whoami"
+```
+
+```bash Development Tasks
+npm run cli execute "npm install"
+npm run cli execute "npm run build"
+npm run cli execute "npm test"
+```
+
+```bash System Information
+npm run cli execute "ps aux"
+npm run cli execute "df -h"
+npm run cli execute "free -m"
+```
+
+```bash With Options
+npm run cli execute "ls" --cwd /tmp
+npm run cli execute "npm run build" --timeout 600
+npm run cli execute "cat package.json" --no-stream
+```
+</CodeGroup>
+
+## Common Use Cases
+
+### Development Workflow
+
+<Tabs>
+  <Tab title="Package Management">
+    ```bash
+    # Install dependencies
+    npm run cli execute "npm install"
+    npm run cli execute "npm install lodash"
+    npm run cli execute "npm update"
+    
+    # Python packages
+    npm run cli execute "pip install requests"
+    npm run cli execute "pip freeze > requirements.txt"
+    
+    # Check installed packages
+    npm run cli execute "npm list --depth=0"
+    npm run cli execute "pip list"
+    ```
+  </Tab>
+  
+  <Tab title="Build and Test">
+    ```bash
+    # Build application
+    npm run cli execute "npm run build"
+    npm run cli execute "npm run build:prod"
+    
+    # Run tests
+    npm run cli execute "npm test"
+    npm run cli execute "npm run test:coverage"
+    npm run cli execute "pytest tests/"
+    
+    # Linting and formatting
+    npm run cli execute "npm run lint"
+    npm run cli execute "npm run format"
+    ```
+  </Tab>
+  
+  <Tab title="Application Management">
+    ```bash
+    # Start/stop services
+    npm run cli execute "npm start"
+    npm run cli execute "pm2 start app.js"
+    npm run cli execute "pm2 restart all"
+    npm run cli execute "pm2 status"
+    
+    # Check application status
+    npm run cli execute "curl http://localhost:8080/health"
+    npm run cli execute "netstat -tulpn | grep 8080"
+    ```
+  </Tab>
+</Tabs>
+
+### Debugging and Diagnostics
+
+<Tabs>
+  <Tab title="Process Management">
+    ```bash
+    # View running processes
+    npm run cli execute "ps aux"
+    npm run cli execute "ps aux | grep node"
+    npm run cli execute "top -n 1"
+    
+    # Kill processes
+    npm run cli execute "pkill -f node"
+    npm run cli execute "kill -9 1234"
+    
+    # Process monitoring
+    npm run cli execute "htop" --timeout 30
+    ```
+  </Tab>
+  
+  <Tab title="System Resources">
+    ```bash
+    # Memory usage
+    npm run cli execute "free -h"
+    npm run cli execute "cat /proc/meminfo"
+    
+    # Disk usage
+    npm run cli execute "df -h"
+    npm run cli execute "du -sh /workspaces/project"
+    
+    # CPU information
+    npm run cli execute "cat /proc/cpuinfo"
+    npm run cli execute "nproc"
+    ```
+  </Tab>
+  
+  <Tab title="Network Diagnostics">
+    ```bash
+    # Network connections
+    npm run cli execute "netstat -tulpn"
+    npm run cli execute "ss -tulpn"
+    
+    # Test connectivity
+    npm run cli execute "ping -c 3 google.com"
+    npm run cli execute "curl -I https://api.example.com"
+    
+    # DNS resolution
+    npm run cli execute "nslookup google.com"
+    npm run cli execute "dig google.com"
+    ```
+  </Tab>
+</Tabs>
+
+### File Operations
+
+<Tabs>
+  <Tab title="File Management">
+    ```bash
+    # List and navigate
+    npm run cli execute "ls -la /workspaces/project"
+    npm run cli execute "find . -name '*.js' | head -10"
+    npm run cli execute "tree -L 2"
+    
+    # File operations
+    npm run cli execute "cp config.example.json config.json"
+    npm run cli execute "mkdir -p logs/archive"
+    npm run cli execute "rm -rf node_modules/.cache"
+    ```
+  </Tab>
+  
+  <Tab title="File Content">
+    ```bash
+    # View files
+    npm run cli execute "cat package.json"
+    npm run cli execute "head -20 app.log"
+    npm run cli execute "tail -f /var/log/app.log" --timeout 30
+    
+    # Search in files
+    npm run cli execute "grep -r 'TODO' src/"
+    npm run cli execute "grep -n 'error' logs/app.log"
+    
+    # File permissions
+    npm run cli execute "chmod +x scripts/deploy.sh"
+    npm run cli execute "chown -R node:node /workspaces/project"
+    ```
+  </Tab>
+  
+  <Tab title="Archives and Backups">
+    ```bash
+    # Create archives
+    npm run cli execute "tar -czf backup.tar.gz /workspaces/project/config"
+    npm run cli execute "zip -r source.zip src/"
+    
+    # Extract archives
+    npm run cli execute "tar -xzf backup.tar.gz"
+    npm run cli execute "unzip source.zip"
+    
+    # File checksums
+    npm run cli execute "md5sum package.json"
+    npm run cli execute "sha256sum dist/app.js"
+    ```
+  </Tab>
+</Tabs>
+
+### Git Operations
+
+<CodeGroup>
+```bash Repository Status
+npm run cli execute "git status" --cwd /workspaces/project
+npm run cli execute "git log --oneline -10" --cwd /workspaces/project
+npm run cli execute "git branch -a" --cwd /workspaces/project
+```
+
+```bash Repository Updates
+npm run cli execute "git pull origin main" --cwd /workspaces/project
+npm run cli execute "git fetch --all" --cwd /workspaces/project
+npm run cli execute "git checkout -b feature/new-feature" --cwd /workspaces/project
+```
+
+```bash Repository Information
+npm run cli execute "git remote -v" --cwd /workspaces/project
+npm run cli execute "git diff --stat" --cwd /workspaces/project
+npm run cli execute "git show --stat HEAD" --cwd /workspaces/project
+```
+</CodeGroup>
+
+## Advanced Usage
+
+### Long-Running Commands
+
+For commands that take a long time to complete:
+
+<CodeGroup>
+```bash Extended Timeout
+npm run cli execute "npm run build:production" --timeout 900
+npm run cli execute "npm run test:e2e" --timeout 1200
+```
+
+```bash Background Processes
+npm run cli execute "nohup npm start > app.log 2>&1 &"
+npm run cli execute "screen -dmS myapp npm start"
+```
+
+```bash Monitoring Progress
+npm run cli execute "tail -f build.log" --timeout 60
+npm run cli execute "watch -n 5 'ps aux | grep node'" --timeout 120
+```
+</CodeGroup>
+
+### Working Directory Management
+
+<CodeGroup>
+```bash Different Directories
+npm run cli execute "ls -la" --cwd /tmp
+npm run cli execute "ls -la" --cwd /var/log
+npm run cli execute "ls -la" --cwd /workspaces/project/src
+```
+
+```bash Directory Navigation
+npm run cli execute "pwd && ls -la"
+npm run cli execute "cd /tmp && pwd && ls -la"
+```
+</CodeGroup>
+
+### Output Control
+
+<CodeGroup>
+```bash Streaming Output (Default)
+npm run cli execute "npm run build"
+# Shows output in real-time as it happens
+```
+
+```bash Non-Streaming Output
+npm run cli execute "cat large-file.json" --no-stream
+# Returns all output at once when command completes
+```
+
+```bash Filtered Output
+npm run cli execute "ps aux | grep node"
+npm run cli execute "ls -la | grep '.js$'"
+```
+</CodeGroup>
+
+## Provider-Specific Behavior
+
+### Daytona Provider
+
+<Check>**Full Support** with real-time streaming</Check>
+
+**Features:**
+- ✅ Real-time output streaming
+- ✅ Working directory support
+- ✅ Command timeout handling
+- ✅ Signal interruption (Ctrl+C)
+- ✅ Exit code preservation
+- ✅ Both stdout and stderr capture
+
+**Limitations:**
+- Commands run with workspace user permissions
+- Interactive commands requiring input may not work as expected
+- Some system-level commands may be restricted
+- Network access depends on workspace network policies
+
+**Best Practices:**
+- Use absolute paths or paths relative to `/workspaces/project`
+- For long-running processes, consider using `screen` or `tmux`
+- Test commands in Daytona's web terminal first if unsure
+
+### Azure Container Instances
+
+<Warning>**Limited Support** - Not fully implemented yet</Warning>
+
+**Current Status:**
+- ❌ Command execution not yet available
+- 🚧 Azure exec API integration in development
+- 🔄 Basic command execution planned
+
+**Workarounds:**
+- Use Daytona provider for interactive development
+- Access Azure containers through Azure portal
+- Use Azure CLI for container management
+
+### E2B Provider
+
+<Info>**Coming Soon** - Provider in development</Info>
+
+**Planned Features:**
+- Real-time output streaming
+- Working directory support
+- Command timeout handling
+- Secure sandboxed execution environment
+
+## Error Handling and Troubleshooting
+
+### Common Errors
+
+<AccordionGroup>
+  <Accordion title="No current sandbox selected">
+    **Error Message**: `❌ No current sandbox selected.`
+    
+    **Solution**:
+    ```bash
+    npm run cli select  # Choose an active sandbox
+    # or
+    npm run cli create <folder>  # Create a new sandbox
+    ```
+  </Accordion>
+  
+  <Accordion title="Provider does not support command execution">
+    **Error Message**: `Provider X does not support command execution.`
+    
+    **Solution**:
+    - Use Daytona provider for command execution
+    - Check provider documentation for limitations
+    - Wait for provider updates to support execution
+  </Accordion>
+  
+  <Accordion title="Sandbox is not running">
+    **Error Message**: `Sandbox is not running (status: stopped)`
+    
+    **Solution**:
+    ```bash
+    npm run cli list  # Check sandbox status
+    # Restart sandbox through provider interface
+    # Or create a new sandbox
+    ```
+  </Accordion>
+  
+  <Accordion title="Command timeout">
+    **Error Message**: Command execution timed out
+    
+    **Solution**:
+    ```bash
+    # Increase timeout
+    npm run cli execute "long-command" --timeout 600
+    
+    # Run in background
+    npm run cli execute "nohup long-command &"
+    ```
+  </Accordion>
+  
+  <Accordion title="Permission denied">
+    **Error Message**: `Permission denied` or `Access denied`
+    
+    **Solution**:
+    - Check file permissions: `npm run cli execute "ls -la"`
+    - Use appropriate user context
+    - Try alternative commands
+    - Check sandbox configuration
+  </Accordion>
+</AccordionGroup>
+
+### Debugging Tips
+
+<Tip>
+  **Test commands locally first** to ensure they work before running in sandbox
+</Tip>
+
+<Tip>
+  **Use `--no-stream` for commands with large output** to avoid overwhelming the terminal
+</Tip>
+
+<Tip>
+  **Check exit codes** - commands that fail will exit with non-zero codes and show error output
+</Tip>
+
+## Integration with Development Workflow
+
+### CI/CD Integration
+
+<CodeGroup>
+```bash Automated Testing
+npm run cli execute "npm run test:ci"
+npm run cli execute "npm run lint:ci"
+npm run cli execute "npm audit"
+```
+
+```bash Deployment Verification
+npm run cli execute "curl -f http://localhost:8080/health"
+npm run cli execute "npm run smoke-test"
+```
+
+```bash Environment Validation
+npm run cli execute "node --version"
+npm run cli execute "npm --version"
+npm run cli execute "env | grep NODE"
+```
+</CodeGroup>
+
+### Development Scripts
+
+Create wrapper scripts for common operations:
+
+<CodeGroup>
+```bash package.json Scripts
+{
+  "scripts": {
+    "sandbox:install": "sandbox-cli execute 'npm install'",
+    "sandbox:build": "sandbox-cli execute 'npm run build'",
+    "sandbox:test": "sandbox-cli execute 'npm test'",
+    "sandbox:logs": "sandbox-cli execute 'tail -f /var/log/app.log' --timeout 60"
+  }
+}
+```
+
+```bash Shell Aliases
+alias sb-exec="npm run cli execute"
+alias sb-logs="npm run cli execute 'tail -f /var/log/app.log' --timeout 60"
+alias sb-ps="npm run cli execute 'ps aux'"
+alias sb-build="npm run cli execute 'npm run build'"
+```
+</CodeGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Deploy Command"
+    icon="rocket"
+    href="/commands/deploy"
+  >
+    Learn efficient deployment strategies
+  </Card>
+  <Card
+    title="List Command"
+    icon="list"
+    href="/commands/list"
+  >
+    Master sandbox management
+  </Card>
+  <Card
+    title="Best Practices"
+    icon="star"
+    href="/guides/best-practices"
+  >
+    Optimize your workflow
+  </Card>
+  <Card
+    title="Troubleshooting"
+    icon="wrench"
+    href="/guides/troubleshooting"
+  >
+    Solve common issues
+  </Card>
+</CardGroup>

@@ -1,0 +1,665 @@
+---
+title: 'Best Practices'
+description: 'Optimize your Sandbox CLI workflow for maximum efficiency'
+---
+
+## Development Workflow Optimization
+
+### The Golden Rule: Create Once, Deploy Many
+
+<Tip>
+  **Always use `deploy` for iterative development** instead of creating new sandboxes. It's 5-10x faster and maintains your environment state.
+</Tip>
+
+<CodeGroup>
+```bash ✅ Recommended Workflow
+# Create sandbox once
+npm run cli create ./my-app --provider daytona
+
+# Deploy changes frequently
+npm run cli deploy ./my-app
+# ... make changes ...
+npm run cli deploy ./my-app
+# ... make more changes ...
+npm run cli deploy ./my-app
+```
+
+```bash ❌ Inefficient Workflow
+# Don't do this - creates new sandbox every time
+npm run cli create ./my-app --provider daytona
+npm run cli destroy <sandbox-id>
+npm run cli create ./my-app --provider daytona
+```
+</CodeGroup>
+
+### Multi-Project Management
+
+<Steps>
+  <Step title="Use Descriptive Project Names">
+    ```bash
+    # Good: Clear project identification
+    npm run cli create ./frontend-app --provider daytona
+    npm run cli create ./api-service --provider azure
+    npm run cli create ./data-processor --provider daytona
+    ```
+  </Step>
+  
+  <Step title="Leverage Sandbox Selection">
+    ```bash
+    # Switch between projects efficiently
+    npm run cli select  # Interactive selection
+    npm run cli deploy ./current-project
+    ```
+  </Step>
+  
+  <Step title="Monitor Active Sandboxes">
+    ```bash
+    # Regular cleanup prevents resource waste
+    npm run cli list
+    npm run cli destroy <unused-sandbox-id>
+    ```
+  </Step>
+</Steps>
+
+## Dockerfile Best Practices
+
+### Layer Optimization
+
+<Tabs>
+  <Tab title="Dependency Caching">
+    ```dockerfile
+    FROM node:18-alpine
+    WORKDIR /app
+    
+    # Copy package files first - these change less frequently
+    COPY package*.json ./
+    RUN npm ci --only=production
+    
+    # Copy source code last - these change most frequently
+    COPY . .
+    
+    EXPOSE 8080
+    CMD ["npm", "start"]
+    ```
+  </Tab>
+  
+  <Tab title="Multi-stage Builds">
+    ```dockerfile
+    # Build stage
+    FROM node:18-alpine AS builder
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm ci
+    COPY . .
+    RUN npm run build
+    
+    # Production stage
+    FROM node:18-alpine AS production
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm ci --only=production
+    COPY --from=builder /app/dist ./dist
+    
+    EXPOSE 8080
+    CMD ["npm", "start"]
+    ```
+  </Tab>
+  
+  <Tab title="Size Optimization">
+    ```dockerfile
+    FROM node:18-alpine  # Use Alpine for smaller size
+    
+    # Install only production dependencies
+    RUN npm ci --only=production && npm cache clean --force
+    
+    # Remove unnecessary files
+    RUN rm -rf /tmp/* /var/cache/apk/*
+    
+    # Use non-root user for security
+    USER node
+    
+    EXPOSE 8080
+    CMD ["npm", "start"]
+    ```
+  </Tab>
+</Tabs>
+
+### Application Configuration
+
+<AccordionGroup>
+  <Accordion title="Port Configuration">
+    Always configure your application to listen on the correct port and interface:
+    
+    ```javascript
+    // Node.js/Express
+    const port = process.env.PORT || 8080;
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`Server running on port ${port}`);
+    });
+    ```
+    
+    ```python
+    # Python/Flask
+    if __name__ == '__main__':
+        port = int(os.environ.get('PORT', 8080))
+        app.run(host='0.0.0.0', port=port)
+    ```
+    
+    ```dockerfile
+    # Always expose the correct port
+    EXPOSE 8080
+    ```
+  </Accordion>
+  
+  <Accordion title="Health Checks">
+    Implement health check endpoints for better monitoring:
+    
+    ```javascript
+    // Health check endpoint
+    app.get('/health', (req, res) => {
+      res.json({ 
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+      });
+    });
+    ```
+    
+    ```dockerfile
+    # Docker health check
+    HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+      CMD curl -f http://localhost:8080/health || exit 1
+    ```
+  </Accordion>
+  
+  <Accordion title="Environment Variables">
+    Use environment variables for configuration:
+    
+    ```javascript
+    const config = {
+      port: process.env.PORT || 8080,
+      nodeEnv: process.env.NODE_ENV || 'development',
+      dbUrl: process.env.DATABASE_URL || 'sqlite://memory',
+      logLevel: process.env.LOG_LEVEL || 'info'
+    };
+    ```
+    
+    ```dockerfile
+    # Set default environment variables
+    ENV NODE_ENV=production
+    ENV LOG_LEVEL=info
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Provider-Specific Optimizations
+
+### Daytona Optimization
+
+<CardGroup cols={2}>
+  <Card title="Fast Iteration" icon="bolt">
+    - Use file sync for quick updates
+    - Keep workspaces running during development
+    - Leverage command execution for testing
+  </Card>
+  <Card title="Resource Efficiency" icon="leaf">
+    - Clean up unused workspaces regularly
+    - Use appropriate workspace sizes
+    - Monitor usage in Daytona dashboard
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```bash Development Session
+# Start development session
+npm run cli create ./my-app --provider daytona
+
+# Rapid iteration cycle
+npm run cli deploy ./my-app
+npm run cli execute "npm test"
+npm run cli execute "npm run lint"
+
+# Continue development...
+npm run cli deploy ./my-app
+npm run cli execute "curl http://localhost:8080/api/test"
+```
+
+```bash Debugging Session
+# Execute commands for debugging
+npm run cli execute "ps aux | grep node"
+npm run cli execute "tail -f /var/log/app.log" --timeout 60
+npm run cli execute "npm run debug"
+```
+</CodeGroup>
+
+### Azure ACI Optimization
+
+<CardGroup cols={2}>
+  <Card title="Resource Planning" icon="chart-line">
+    - Right-size CPU and memory
+    - Use appropriate regions
+    - Plan for scaling needs
+  </Card>
+  <Card title="Cost Management" icon="dollar-sign">
+    - Destroy unused containers
+    - Use spot instances when available
+    - Monitor Azure costs
+  </Card>
+</CardGroup>
+
+<CodeGroup>
+```bash Resource Management
+# Monitor container resources
+az container show --resource-group sandbox-rg --name my-container
+
+# Scale resources if needed
+az container update --resource-group sandbox-rg --name my-container --cpu 2 --memory 4
+```
+
+```bash Cost Optimization
+# List all container groups
+npm run cli list
+
+# Clean up unused resources
+npm run cli destroy <unused-sandbox-id>
+```
+</CodeGroup>
+
+## Command Execution Best Practices
+
+### Efficient Command Usage
+
+<Tabs>
+  <Tab title="Short Commands">
+    ```bash
+    # Quick status checks
+    npm run cli execute "ps aux | grep node"
+    npm run cli execute "df -h"
+    npm run cli execute "free -m"
+    
+    # File operations
+    npm run cli execute "ls -la"
+    npm run cli execute "cat package.json"
+    ```
+  </Tab>
+  
+  <Tab title="Long-Running Commands">
+    ```bash
+    # Use appropriate timeouts
+    npm run cli execute "npm run build" --timeout 600
+    npm run cli execute "npm run test:e2e" --timeout 900
+    
+    # Background processes
+    npm run cli execute "nohup npm start > app.log 2>&1 &"
+    npm run cli execute "screen -dmS myapp npm start"
+    ```
+  </Tab>
+  
+  <Tab title="Monitoring Commands">
+    ```bash
+    # Monitor with timeouts
+    npm run cli execute "tail -f /var/log/app.log" --timeout 60
+    npm run cli execute "watch -n 5 'ps aux | grep node'" --timeout 120
+    
+    # One-time checks
+    npm run cli execute "curl -I http://localhost:8080" --no-stream
+    ```
+  </Tab>
+</Tabs>
+
+### Command Patterns
+
+<AccordionGroup>
+  <Accordion title="Development Commands">
+    ```bash
+    # Package management
+    npm run cli execute "npm install"
+    npm run cli execute "npm update"
+    npm run cli execute "npm audit fix"
+    
+    # Build and test
+    npm run cli execute "npm run build"
+    npm run cli execute "npm test"
+    npm run cli execute "npm run lint"
+    
+    # Application management
+    npm run cli execute "pm2 restart all"
+    npm run cli execute "pm2 status"
+    ```
+  </Accordion>
+  
+  <Accordion title="Debugging Commands">
+    ```bash
+    # Process inspection
+    npm run cli execute "ps aux"
+    npm run cli execute "top -n 1"
+    npm run cli execute "netstat -tulpn"
+    
+    # Log analysis
+    npm run cli execute "tail -100 /var/log/app.log"
+    npm run cli execute "grep ERROR /var/log/app.log"
+    
+    # System resources
+    npm run cli execute "df -h"
+    npm run cli execute "free -h"
+    npm run cli execute "iostat"
+    ```
+  </Accordion>
+  
+  <Accordion title="File Operations">
+    ```bash
+    # File management
+    npm run cli execute "find . -name '*.log' -mtime +7 -delete"
+    npm run cli execute "tar -czf backup.tar.gz /workspaces/project/config"
+    
+    # Content analysis
+    npm run cli execute "wc -l src/**/*.js"
+    npm run cli execute "grep -r 'TODO' src/"
+    
+    # Permissions
+    npm run cli execute "chmod +x scripts/*.sh"
+    npm run cli execute "chown -R node:node /workspaces/project"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Security Best Practices
+
+### Credential Management
+
+<Warning>
+  **Never commit configuration files** containing API keys or credentials to version control.
+</Warning>
+
+<Steps>
+  <Step title="Secure File Permissions">
+    ```bash
+    chmod 600 ~/.sandbox-cli/config.json
+    ```
+  </Step>
+  
+  <Step title="Use Environment Variables">
+    ```bash
+    export DAYTONA_API_KEY="your-api-key"
+    export AZURE_SUBSCRIPTION_ID="your-subscription-id"
+    ```
+  </Step>
+  
+  <Step title="Regular Credential Rotation">
+    ```bash
+    # Rotate API keys regularly
+    npm run cli configure daytona  # Update with new key
+    npm run cli configure azure    # Update credentials
+    ```
+  </Step>
+</Steps>
+
+### Container Security
+
+<AccordionGroup>
+  <Accordion title="Non-Root User">
+    ```dockerfile
+    # Create and use non-root user
+    RUN addgroup -g 1001 -S nodejs
+    RUN adduser -S nextjs -u 1001
+    USER nextjs
+    
+    EXPOSE 8080
+    CMD ["npm", "start"]
+    ```
+  </Accordion>
+  
+  <Accordion title="Minimal Base Images">
+    ```dockerfile
+    # Use minimal base images
+    FROM node:18-alpine  # Instead of node:18
+    FROM python:3.11-alpine  # Instead of python:3.11
+    
+    # Remove unnecessary packages
+    RUN apk del .build-deps
+    ```
+  </Accordion>
+  
+  <Accordion title="Dependency Scanning">
+    ```bash
+    # Regular security audits
+    npm run cli execute "npm audit"
+    npm run cli execute "npm audit fix"
+    
+    # Python security scanning
+    npm run cli execute "pip-audit"
+    npm run cli execute "safety check"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Performance Monitoring
+
+### Application Metrics
+
+<Tabs>
+  <Tab title="Resource Usage">
+    ```bash
+    # Monitor resource usage
+    npm run cli execute "ps aux --sort=-%cpu | head -10"
+    npm run cli execute "ps aux --sort=-%mem | head -10"
+    npm run cli execute "iostat -x 1 5"
+    ```
+  </Tab>
+  
+  <Tab title="Application Health">
+    ```bash
+    # Health checks
+    npm run cli execute "curl -f http://localhost:8080/health"
+    npm run cli execute "curl -w '@curl-format.txt' -s http://localhost:8080/"
+    
+    # Response time monitoring
+    npm run cli execute "ab -n 100 -c 10 http://localhost:8080/"
+    ```
+  </Tab>
+  
+  <Tab title="Log Analysis">
+    ```bash
+    # Error monitoring
+    npm run cli execute "grep -c ERROR /var/log/app.log"
+    npm run cli execute "tail -f /var/log/app.log | grep ERROR" --timeout 60
+    
+    # Performance logs
+    npm run cli execute "grep 'response_time' /var/log/app.log | tail -20"
+    ```
+  </Tab>
+</Tabs>
+
+## Automation and Scripting
+
+### Development Scripts
+
+Create reusable scripts for common operations:
+
+<CodeGroup>
+```json package.json
+{
+  "scripts": {
+    "sb:create": "npm run cli create . --provider daytona",
+    "sb:deploy": "npm run cli deploy .",
+    "sb:test": "npm run cli execute 'npm test'",
+    "sb:build": "npm run cli execute 'npm run build'",
+    "sb:logs": "npm run cli execute 'tail -f /var/log/app.log' --timeout 60",
+    "sb:health": "npm run cli execute 'curl -f http://localhost:8080/health'",
+    "sb:clean": "npm run cli list && echo 'Run: npm run cli destroy <sandbox-id>'"
+  }
+}
+```
+
+```bash Shell Aliases
+# Add to ~/.bashrc or ~/.zshrc
+alias sb="npm run cli"
+alias sb-create="npm run cli create"
+alias sb-deploy="npm run cli deploy"
+alias sb-exec="npm run cli execute"
+alias sb-list="npm run cli list"
+alias sb-logs="npm run cli execute 'tail -f /var/log/app.log' --timeout 60"
+```
+</CodeGroup>
+
+### CI/CD Integration
+
+<CodeGroup>
+```yaml GitHub Actions
+name: Deploy to Sandbox
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install Sandbox CLI
+        run: |
+          git clone <sandbox-cli-repo>
+          cd sandbox-cli
+          npm install && npm run build
+      
+      - name: Deploy to Sandbox
+        env:
+          DAYTONA_API_KEY: ${{ secrets.DAYTONA_API_KEY }}
+        run: |
+          npm run cli configure daytona
+          npm run cli create . --provider daytona
+          npm run cli execute "npm test"
+```
+
+```bash Local Development Script
+#!/bin/bash
+# dev-deploy.sh
+
+set -e
+
+echo "🚀 Starting development deployment..."
+
+# Deploy latest changes
+npm run cli deploy .
+
+# Run tests
+echo "🧪 Running tests..."
+npm run cli execute "npm test"
+
+# Check health
+echo "🏥 Checking application health..."
+npm run cli execute "curl -f http://localhost:8080/health"
+
+echo "✅ Deployment complete!"
+echo "🌐 Access your app: $(npm run cli list | grep -o 'https://[^[:space:]]*')"
+```
+</CodeGroup>
+
+## Troubleshooting Strategies
+
+### Systematic Debugging
+
+<Steps>
+  <Step title="Check Sandbox Status">
+    ```bash
+    npm run cli list
+    # Verify sandbox is running and accessible
+    ```
+  </Step>
+  
+  <Step title="Verify Application Health">
+    ```bash
+    npm run cli execute "ps aux | grep node"
+    npm run cli execute "curl http://localhost:8080/health"
+    ```
+  </Step>
+  
+  <Step title="Examine Logs">
+    ```bash
+    npm run cli execute "tail -100 /var/log/app.log"
+    npm run cli execute "journalctl -u myapp -n 50"
+    ```
+  </Step>
+  
+  <Step title="Check Resources">
+    ```bash
+    npm run cli execute "df -h"
+    npm run cli execute "free -m"
+    npm run cli execute "top -n 1"
+    ```
+  </Step>
+</Steps>
+
+### Common Issue Patterns
+
+<AccordionGroup>
+  <Accordion title="Application Won't Start">
+    **Debugging Steps**:
+    ```bash
+    # Check if process is running
+    npm run cli execute "ps aux | grep node"
+    
+    # Check application logs
+    npm run cli execute "tail -50 /var/log/app.log"
+    
+    # Verify dependencies
+    npm run cli execute "npm list"
+    
+    # Check port binding
+    npm run cli execute "netstat -tulpn | grep 8080"
+    ```
+  </Accordion>
+  
+  <Accordion title="Performance Issues">
+    **Debugging Steps**:
+    ```bash
+    # Monitor resource usage
+    npm run cli execute "top -n 1"
+    npm run cli execute "iostat -x 1 5"
+    
+    # Check memory usage
+    npm run cli execute "free -h"
+    npm run cli execute "ps aux --sort=-%mem | head -10"
+    
+    # Analyze response times
+    npm run cli execute "curl -w '%{time_total}' http://localhost:8080/"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Troubleshooting Guide"
+    icon="wrench"
+    href="/guides/troubleshooting"
+  >
+    Solve common issues quickly
+  </Card>
+  <Card
+    title="Command Reference"
+    icon="terminal"
+    href="/commands/overview"
+  >
+    Master all CLI commands
+  </Card>
+  <Card
+    title="Provider Comparison"
+    icon="balance-scale"
+    href="/providers/overview"
+  >
+    Choose the right provider
+  </Card>
+  <Card
+    title="Examples"
+    icon="code"
+    href="/examples/node-app"
+  >
+    See real-world examples
+  </Card>
+</CardGroup>

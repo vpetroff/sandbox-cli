@@ -1,0 +1,399 @@
+---
+title: 'Configuration'
+description: 'Configure providers and customize your Sandbox CLI experience'
+---
+
+## Configuration Overview
+
+Sandbox CLI stores its configuration in `~/.sandbox-cli/config.json`. This file contains provider settings, current sandbox information, and sandbox metadata.
+
+<Info>
+  The configuration file is automatically created when you run `npm run cli init` for the first time.
+</Info>
+
+## Configuration Structure
+
+```json
+{
+  "defaultProvider": "daytona",
+  "currentSandbox": "daytona-1234567890-abc123",
+  "providers": {
+    "daytona": {
+      "apiKey": "your-api-key",
+      "serverUrl": "https://app.daytona.io/api",
+      "target": "eu"
+    },
+    "azure": {
+      "subscriptionId": "your-subscription-id",
+      "resourceGroup": "sandbox-rg",
+      "location": "eastus",
+      "containerRegistry": "myregistry"
+    }
+  },
+  "sandboxes": {
+    "sandbox-id": {
+      "id": "sandbox-id",
+      "name": "my-app",
+      "provider": "daytona",
+      "status": "deployed",
+      "url": "https://sandbox-abc123.proxy.daytona.work",
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "deploymentCount": 3,
+      "sourceFolder": "/path/to/my-app"
+    }
+  }
+}
+```
+
+## Initial Setup
+
+<Steps>
+  <Step title="Initialize Configuration">
+    Run the initialization command:
+    ```bash
+    npm run cli init
+    ```
+    
+    This will:
+    - Create the configuration directory
+    - Set up the basic configuration structure
+    - Prompt you to select a default provider
+  </Step>
+  
+  <Step title="Choose Default Provider">
+    Select your preferred provider from the list:
+    - **Daytona**: Great for quick development environments
+    - **Azure**: Enterprise-grade with Azure integration
+    - **E2B**: Coming soon
+  </Step>
+</Steps>
+
+## Provider Configuration
+
+### Daytona Configuration
+
+<Tabs>
+  <Tab title="Interactive Setup">
+    ```bash
+    npm run cli configure daytona
+    ```
+    
+    You'll be prompted for:
+    - **API Key**: From your Daytona dashboard
+    - **Server URL**: Default is `https://app.daytona.io/api`
+    - **Target Region**: Default is `eu`
+  </Tab>
+  
+  <Tab title="Manual Configuration">
+    Edit `~/.sandbox-cli/config.json`:
+    ```json
+    {
+      "providers": {
+        "daytona": {
+          "apiKey": "dt_your_api_key_here",
+          "serverUrl": "https://app.daytona.io/api",
+          "target": "eu"
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Accordion title="Getting Your Daytona API Key">
+  1. Log in to your [Daytona Dashboard](https://app.daytona.io)
+  2. Navigate to Settings → API Keys
+  3. Create a new API key or copy an existing one
+  4. The key should start with `dt_`
+</Accordion>
+
+### Azure Container Instances Configuration
+
+<Tabs>
+  <Tab title="Interactive Setup">
+    ```bash
+    npm run cli configure azure
+    ```
+    
+    Required information:
+    - **Subscription ID**: Your Azure subscription ID
+    - **Resource Group**: Name of your resource group
+    - **Container Registry**: Name of your Azure Container Registry
+    - **Location**: Azure region (default: eastus)
+    - **Service Principal** (optional): For automated authentication
+  </Tab>
+  
+  <Tab title="Prerequisites">
+    Before configuring Azure, ensure you have:
+    
+    1. **Azure CLI installed and logged in:**
+    ```bash
+    az login
+    az account set --subscription <your-subscription-id>
+    ```
+    
+    2. **Resource Group created:**
+    ```bash
+    az group create --name sandbox-rg --location eastus
+    ```
+    
+    3. **Container Registry created:**
+    ```bash
+    az acr create --resource-group sandbox-rg \
+                  --name myregistry \
+                  --sku Basic \
+                  --admin-enabled true
+    ```
+  </Tab>
+  
+  <Tab title="Service Principal (Optional)">
+    For automated authentication, create a service principal:
+    
+    ```bash
+    # Create service principal
+    az ad sp create-for-rbac --name "sandbox-cli-sp" \
+                             --role contributor \
+                             --scopes /subscriptions/<subscription-id>
+    ```
+    
+    This returns:
+    ```json
+    {
+      "appId": "your-client-id",
+      "displayName": "sandbox-cli-sp",
+      "password": "your-client-secret",
+      "tenant": "your-tenant-id"
+    }
+    ```
+    
+    Add these to your configuration:
+    ```json
+    {
+      "providers": {
+        "azure": {
+          "subscriptionId": "your-subscription-id",
+          "resourceGroup": "sandbox-rg",
+          "location": "eastus",
+          "containerRegistry": "myregistry",
+          "tenantId": "your-tenant-id",
+          "clientId": "your-client-id",
+          "clientSecret": "your-client-secret"
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Advanced Configuration
+
+### Setting Default Provider
+
+<CodeGroup>
+```bash Via Command
+npm run cli init
+# Select your preferred provider when prompted
+```
+
+```bash Direct Edit
+# Edit ~/.sandbox-cli/config.json
+{
+  "defaultProvider": "azure"
+}
+```
+</CodeGroup>
+
+### Multiple Provider Setup
+
+You can configure multiple providers and switch between them:
+
+```json
+{
+  "defaultProvider": "daytona",
+  "providers": {
+    "daytona": {
+      "apiKey": "dt_your_daytona_key",
+      "serverUrl": "https://app.daytona.io/api",
+      "target": "eu"
+    },
+    "azure": {
+      "subscriptionId": "your-azure-subscription",
+      "resourceGroup": "sandbox-rg",
+      "location": "eastus",
+      "containerRegistry": "myregistry"
+    }
+  }
+}
+```
+
+### Environment-Specific Configuration
+
+For different environments (dev, staging, prod), you can:
+
+<Tabs>
+  <Tab title="Separate Configs">
+    Use different configuration files:
+    ```bash
+    # Development
+    export SANDBOX_CONFIG_PATH=~/.sandbox-cli/dev-config.json
+    
+    # Staging
+    export SANDBOX_CONFIG_PATH=~/.sandbox-cli/staging-config.json
+    ```
+  </Tab>
+  
+  <Tab title="Provider Variants">
+    Configure multiple instances of the same provider:
+    ```json
+    {
+      "providers": {
+        "azure-dev": {
+          "subscriptionId": "dev-subscription-id",
+          "resourceGroup": "dev-sandbox-rg",
+          "containerRegistry": "devregistry"
+        },
+        "azure-prod": {
+          "subscriptionId": "prod-subscription-id",
+          "resourceGroup": "prod-sandbox-rg",
+          "containerRegistry": "prodregistry"
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Configuration Validation
+
+Verify your configuration is correct:
+
+<CodeGroup>
+```bash Check All Providers
+npm run cli list
+```
+
+```bash Test Specific Provider
+npm run cli configure daytona --test
+```
+
+```bash View Current Config
+cat ~/.sandbox-cli/config.json | jq .
+```
+</CodeGroup>
+
+## Security Best Practices
+
+<Warning>
+  **Never commit your configuration file to version control!** It contains sensitive credentials.
+</Warning>
+
+### Protecting Credentials
+
+1. **File Permissions**: Ensure only you can read the config file:
+```bash
+chmod 600 ~/.sandbox-cli/config.json
+```
+
+2. **Environment Variables**: For CI/CD, use environment variables:
+```bash
+export DAYTONA_API_KEY="your-api-key"
+export AZURE_SUBSCRIPTION_ID="your-subscription-id"
+```
+
+3. **Service Principals**: Use service principals instead of personal credentials for Azure.
+
+### Credential Rotation
+
+Regularly rotate your credentials:
+
+<Steps>
+  <Step title="Generate New Credentials">
+    Create new API keys or service principals
+  </Step>
+  
+  <Step title="Update Configuration">
+    ```bash
+    npm run cli configure <provider>
+    ```
+  </Step>
+  
+  <Step title="Test Configuration">
+    ```bash
+    npm run cli list
+    ```
+  </Step>
+  
+  <Step title="Revoke Old Credentials">
+    Remove old API keys from provider dashboards
+  </Step>
+</Steps>
+
+## Troubleshooting Configuration
+
+<AccordionGroup>
+  <Accordion title="Configuration file not found">
+    **Solution**: Run `npm run cli init` to create the initial configuration.
+  </Accordion>
+  
+  <Accordion title="Invalid API key">
+    **Symptoms**: Authentication errors when using Daytona
+    
+    **Solutions**:
+    - Verify API key in Daytona dashboard
+    - Ensure key starts with `dt_`
+    - Reconfigure: `npm run cli configure daytona`
+  </Accordion>
+  
+  <Accordion title="Azure authentication fails">
+    **Symptoms**: "Not logged in to Azure" errors
+    
+    **Solutions**:
+    - Run `az login` and `az account set --subscription <id>`
+    - Verify subscription ID is correct
+    - Check resource group and registry exist
+  </Accordion>
+  
+  <Accordion title="Permission denied errors">
+    **Symptoms**: Cannot read/write configuration file
+    
+    **Solutions**:
+    - Check file permissions: `ls -la ~/.sandbox-cli/`
+    - Fix permissions: `chmod 600 ~/.sandbox-cli/config.json`
+    - Ensure directory exists: `mkdir -p ~/.sandbox-cli`
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+With your configuration complete, you're ready to:
+
+<CardGroup cols={2}>
+  <Card
+    title="Deploy Your First App"
+    icon="rocket"
+    href="/getting-started/quick-start"
+  >
+    Follow the quick start guide
+  </Card>
+  <Card
+    title="Explore Providers"
+    icon="cloud"
+    href="/providers/overview"
+  >
+    Learn about each provider
+  </Card>
+  <Card
+    title="Master Commands"
+    icon="terminal"
+    href="/commands/overview"
+  >
+    Discover all available commands
+  </Card>
+  <Card
+    title="Best Practices"
+    icon="star"
+    href="/guides/best-practices"
+  >
+    Optimize your workflow
+  </Card>
+</CardGroup>

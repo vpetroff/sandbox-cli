@@ -1,0 +1,24 @@
+{
+  "name": "sandbox-cli-docs",
+  "version": "1.0.0",
+  "description": "Documentation for Sandbox CLI",
+  "scripts": {
+    "dev": "mintlify dev",
+    "build": "mintlify build",
+    "preview": "mintlify preview"
+  },
+  "devDependencies": {
+    "mintlify": "^4.0.0"
+  },
+  "keywords": [
+    "sandbox",
+    "cli",
+    "docker",
+    "deployment",
+    "development",
+    "daytona",
+    "azure"
+  ],
+  "author": "Sandbox CLI Team",
+  "license": "MIT"
+}

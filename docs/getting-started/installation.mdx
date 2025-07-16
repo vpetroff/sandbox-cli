@@ -1,0 +1,210 @@
+---
+title: 'Installation'
+description: 'Get Sandbox CLI up and running on your system'
+---
+
+## Prerequisites
+
+Before installing Sandbox CLI, ensure you have the following prerequisites installed on your system:
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js">
+    Version 16 or higher required
+  </Card>
+  <Card title="npm" icon="npm">
+    Comes with Node.js installation
+  </Card>
+  <Card title="Docker" icon="docker">
+    Required for building and pushing images
+  </Card>
+  <Card title="Git" icon="git-alt">
+    For cloning the repository
+  </Card>
+</CardGroup>
+
+## Installation Steps
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the Sandbox CLI repository from GitHub:
+    ```bash
+    git clone <repository-url>
+    cd sandbox-cli
+    ```
+  </Step>
+  
+  <Step title="Install Dependencies">
+    Install the required Node.js dependencies:
+    ```bash
+    npm install
+    ```
+  </Step>
+  
+  <Step title="Build the Project">
+    Compile the TypeScript code:
+    ```bash
+    npm run build
+    ```
+  </Step>
+  
+  <Step title="Verify Installation">
+    Test that the CLI is working correctly:
+    ```bash
+    npm run cli -- --help
+    ```
+    
+    You should see the help output with available commands.
+  </Step>
+</Steps>
+
+## Provider-Specific Prerequisites
+
+Depending on which cloud provider you plan to use, you'll need additional tools:
+
+### For Azure Container Instances
+
+<Accordion title="Azure CLI Installation">
+  Install the Azure CLI for your operating system:
+
+  **macOS:**
+  ```bash
+  brew install azure-cli
+  ```
+
+  **Windows:**
+  Download from [https://aka.ms/installazurecliwindows](https://aka.ms/installazurecliwindows)
+
+  **Linux:**
+  ```bash
+  curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  ```
+
+  After installation, login to Azure:
+  ```bash
+  az login
+  az account set --subscription <your-subscription-id>
+  ```
+</Accordion>
+
+### For Daytona
+
+<Accordion title="Daytona Account Setup">
+  You'll need:
+  - A Daytona account
+  - API key from your Daytona dashboard
+  - Access to Daytona server (default: https://app.daytona.io/api)
+</Accordion>
+
+### For E2B
+
+<Accordion title="E2B Setup (Coming Soon)">
+  E2B provider support is currently in development. Stay tuned for updates!
+</Accordion>
+
+## Docker Setup
+
+Docker is essential for building and managing container images:
+
+<Tabs>
+  <Tab title="macOS">
+    Install Docker Desktop:
+    ```bash
+    brew install --cask docker
+    ```
+    
+    Or download from [Docker Desktop for Mac](https://docs.docker.com/desktop/mac/install/)
+  </Tab>
+  
+  <Tab title="Windows">
+    Download and install [Docker Desktop for Windows](https://docs.docker.com/desktop/windows/install/)
+  </Tab>
+  
+  <Tab title="Linux">
+    Install Docker Engine:
+    ```bash
+    # Ubuntu/Debian
+    sudo apt-get update
+    sudo apt-get install docker.io
+    
+    # CentOS/RHEL
+    sudo yum install docker
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  Make sure Docker is running before using Sandbox CLI. You can verify with:
+  ```bash
+  docker info
+  ```
+</Warning>
+
+## Verification
+
+After completing the installation, verify everything is working:
+
+<CodeGroup>
+```bash Check CLI Installation
+npm run cli -- --version
+```
+
+```bash Check Docker
+docker --version
+docker info
+```
+
+```bash Check Azure CLI (if using Azure)
+az --version
+az account show
+```
+</CodeGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Node.js Version Issues">
+    If you encounter Node.js version issues:
+    
+    1. Check your Node.js version: `node --version`
+    2. Update to Node.js 16+ using [nvm](https://github.com/nvm-sh/nvm) or download from [nodejs.org](https://nodejs.org/)
+    3. Clear npm cache: `npm cache clean --force`
+    4. Reinstall dependencies: `rm -rf node_modules && npm install`
+  </Accordion>
+
+  <Accordion title="Docker Issues">
+    Common Docker problems:
+    
+    - **Docker not running**: Start Docker Desktop or Docker daemon
+    - **Permission issues**: Add your user to the docker group (Linux)
+    - **Build failures**: Check Dockerfile syntax and dependencies
+  </Accordion>
+
+  <Accordion title="Build Errors">
+    If TypeScript compilation fails:
+    
+    1. Ensure you have the latest dependencies: `npm update`
+    2. Clear build cache: `npm run clean`
+    3. Rebuild: `npm run build`
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Once installation is complete, proceed to:
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start"
+    icon="play"
+    href="/getting-started/quick-start"
+  >
+    Deploy your first application
+  </Card>
+  <Card
+    title="Configuration"
+    icon="gear"
+    href="/getting-started/configuration"
+  >
+    Set up your providers
+  </Card>
+</CardGroup>

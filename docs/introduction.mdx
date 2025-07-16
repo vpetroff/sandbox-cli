@@ -1,0 +1,124 @@
+---
+title: Introduction
+description: 'Deploy applications to sandbox environments with a single command'
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.svg"
+  alt="Hero Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.svg"
+  alt="Hero Dark"
+/>
+
+## What is Sandbox CLI?
+
+Sandbox CLI is a powerful command-line tool that simplifies deploying applications to cloud development environments. With support for multiple providers like Daytona, Azure Container Instances, and E2B, you can deploy your Dockerized applications instantly and manage them effortlessly.
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Deployment"
+    icon="rocket"
+    href="/getting-started/quick-start"
+  >
+    Deploy any Dockerized application with a single command
+  </Card>
+  <Card
+    title="Multiple Providers"
+    icon="cloud"
+    href="/providers/overview"
+  >
+    Support for Daytona, Azure Container Instances, and E2B
+  </Card>
+  <Card
+    title="Command Execution"
+    icon="terminal"
+    href="/commands/execute"
+  >
+    Run commands directly in your sandbox environments
+  </Card>
+  <Card
+    title="Easy Management"
+    icon="list"
+    href="/commands/list"
+  >
+    List, browse, and destroy running sandboxes with ease
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<AccordionGroup>
+  <Accordion title="One-Command Deployment">
+    Deploy any Dockerized application instantly with automatic image building and registry management.
+  </Accordion>
+
+  <Accordion title="Multiple Cloud Providers">
+    Choose from Daytona, Azure Container Instances, or E2B based on your needs and preferences.
+  </Accordion>
+
+  <Accordion title="Docker Integration">
+    Seamless Docker integration with automatic image building, pushing, and container management.
+  </Accordion>
+
+  <Accordion title="Secure Authentication">
+    Support for service principal authentication, CLI-based auth, and secure credential management.
+  </Accordion>
+
+  <Accordion title="Sandbox Management">
+    Complete lifecycle management - create, deploy, list, browse, execute commands, and destroy sandboxes.
+  </Accordion>
+
+  <Accordion title="Direct Access">
+    Automatic URL generation for deployed applications with instant browser access.
+  </Accordion>
+</AccordionGroup>
+
+## Getting Started
+
+<Steps>
+  <Step title="Install Sandbox CLI">
+    Clone the repository and install dependencies
+    ```bash
+    git clone <repository-url>
+    cd sandbox-cli
+    npm install && npm run build
+    ```
+  </Step>
+  <Step title="Initialize Configuration">
+    Set up your CLI configuration
+    ```bash
+    npm run cli init
+    ```
+  </Step>
+  <Step title="Configure a Provider">
+    Choose and configure your preferred cloud provider
+    ```bash
+    npm run cli configure daytona
+    # or
+    npm run cli configure azure
+    ```
+  </Step>
+  <Step title="Deploy Your First App">
+    Create and deploy your application
+    ```bash
+    npm run cli create ./my-app --provider daytona
+    npm run cli deploy ./my-app
+    ```
+  </Step>
+</Steps>
+
+## Why Sandbox CLI?
+
+Traditional deployment to development environments often involves complex setup, multiple tools, and time-consuming configuration. Sandbox CLI eliminates this friction by providing:
+
+- **Unified Interface**: One CLI for multiple cloud providers
+- **Instant Deployment**: From code to running application in minutes
+- **Development Focus**: Built specifically for development and testing workflows
+- **Provider Flexibility**: Switch between providers without changing your workflow
+- **Command Execution**: Debug and manage applications directly from your terminal
+
+Ready to get started? Check out our [Quick Start Guide](/getting-started/quick-start) or explore the [available providers](/providers/overview).
