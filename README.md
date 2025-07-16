@@ -450,39 +450,6 @@ npm run dev
 npm run cli -- <command>
 ```
 
-## 🔄 Migration Guide
-
-If you were using the previous single `deploy` command, here's how to migrate to the new split workflow:
-
-### Old Workflow (Deprecated)
-```bash
-# This created and deployed in one step
-npm run cli deploy ./my-app --provider azure
-```
-
-### New Workflow (Recommended)
-```bash
-# 1. Create sandbox once
-npm run cli create ./my-app --provider azure
-
-# 2. Deploy code iteratively
-npm run cli deploy ./my-app
-# ... make changes ...
-npm run cli deploy ./my-app  # Much faster subsequent deployments!
-```
-
-### Benefits of New Workflow
-- **Faster iterations**: Deploy code changes without recreating infrastructure
-- **Better resource management**: Reuse sandbox environments
-- **Clearer separation**: Infrastructure setup vs. code deployment
-- **Multi-project support**: Switch between different sandboxes easily
-
-### Key Differences
-- `create` replaces the infrastructure setup part of the old `deploy`
-- New `deploy` only handles code updates to existing sandboxes
-- `select` command lets you switch between multiple sandbox environments
-- `list` command shows which sandbox is currently active
-
 ## 🔍 Troubleshooting
 
 ### Azure Issues
